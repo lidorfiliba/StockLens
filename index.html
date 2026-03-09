@@ -1,699 +1,1053 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StockLens — Financial Analyzer</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>StockLens</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --border: #1e1e2e;
-    --accent: #00ff9d;
-    --accent2: #ff6b35;
-    --accent3: #7c6bff;
-    --text: #e8e8f0;
-    --muted: #5a5a7a;
-    --up: #00ff9d;
-    --down: #ff4d6d;
-  }
+/* ═══════════════════════════════════════════════
+   THEME TOKENS
+═══════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg: #060810;
+  --bg2: #0d0f1a;
+  --surface: rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.07);
+  --surface3: rgba(255,255,255,0.10);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f0f8;
+  --text2: #c8c8d8;
+  --muted: rgba(240,240,248,0.38);
+  --accent: #00e5a0;
+  --accent-dim: rgba(0,229,160,0.12);
+  --accent-glow: rgba(0,229,160,0.22);
+  --up: #00e5a0;
+  --down: #ff5f57;
+  --blue: #5aabff;
+  --gold: #f7c948;
+  --canvas-opacity: 0.5;
+}
+[data-theme="light"] {
+  --bg: #f4f5f9;
+  --bg2: #eceef5;
+  --surface: rgba(255,255,255,0.75);
+  --surface2: rgba(255,255,255,0.9);
+  --surface3: rgba(255,255,255,1);
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #0d0f1a;
+  --text2: #3a3d52;
+  --muted: rgba(13,15,26,0.42);
+  --accent: #00b37a;
+  --accent-dim: rgba(0,179,122,0.1);
+  --accent-glow: rgba(0,179,122,0.2);
+  --up: #00a86b;
+  --down: #e03030;
+  --blue: #1a6fd4;
+  --gold: #c8950a;
+  --canvas-opacity: 0.12;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+html { scroll-behavior: smooth; }
 
-  /* Grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,255,157,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,255,157,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.35s, color 0.35s;
+}
 
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px;
-    position: relative;
-    z-index: 1;
-  }
+/* ═══════════════════════════════════════════════
+   BACKGROUND
+═══════════════════════════════════════════════ */
+#bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  opacity: var(--canvas-opacity);
+  transition: opacity 0.35s;
+}
 
-  /* HEADER */
-  header {
-    padding: 32px 0 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+/* vignette only in dark */
+[data-theme="dark"] body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 1;
+  background: radial-gradient(ellipse 90% 75% at 50% 50%, transparent 25%, rgba(6,8,16,0.82) 100%);
+  pointer-events: none;
+}
 
-  .logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.2rem;
-    letter-spacing: 2px;
-    color: var(--text);
-  }
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.app {
+  position: relative; z-index: 2;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 28px 96px;
+}
 
-  .logo span { color: var(--accent); }
+/* ═══════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════ */
+header {
+  padding: 32px 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
 
-  .api-note {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted);
-    background: var(--surface);
-    padding: 6px 12px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-  }
+.logo {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 1.9rem; letter-spacing: -0.5px; line-height: 1;
+}
+.logo em { font-style: normal; color: var(--accent); }
+.logo-sub { font-size: 0.6rem; color: var(--muted); letter-spacing: 2.5px; text-transform: uppercase; margin-top: 3px; }
 
-  /* TABS */
-  .tabs {
-    display: flex;
-    gap: 0;
-    margin: 32px 0 0;
-    border-bottom: 1px solid var(--border);
-  }
+.header-actions { display: flex; align-items: center; gap: 10px; }
 
-  .tab {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 12px 24px;
-    cursor: pointer;
-    color: var(--muted);
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    background: none;
-    border-left: none; border-right: none; border-top: none;
-    outline: none;
-  }
+/* Theme toggle */
+.theme-btn {
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+}
+.theme-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
 
-  .tab:hover { color: var(--text); }
-  .tab.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-  }
+.credit-chip {
+  font-size: 0.62rem; color: var(--muted); letter-spacing: 1px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+}
+.credit-chip b { color: var(--accent); font-weight: 500; }
 
-  /* PANELS */
-  .panel { display: none; padding: 32px 0; }
-  .panel.active { display: block; }
+/* ═══════════════════════════════════════════════
+   API BAR
+═══════════════════════════════════════════════ */
+.api-bar {
+  margin-top: 18px;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 16px;
+  backdrop-filter: blur(12px); flex-wrap: wrap;
+}
+.api-bar-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); white-space: nowrap; }
+.api-bar input {
+  flex: 1; min-width: 160px;
+  background: transparent; border: none;
+  color: var(--accent); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem; outline: none; letter-spacing: 1px;
+}
 
-  /* SEARCH BAR */
-  .search-bar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 32px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
+/* ═══════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════ */
+.tabs {
+  display: flex; gap: 4px; margin-top: 24px;
+  padding: 4px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 10px;
+  width: fit-content; backdrop-filter: blur(12px);
+}
+.tab {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; letter-spacing: 0.8px; text-transform: uppercase;
+  padding: 8px 18px; cursor: pointer; color: var(--muted);
+  border-radius: 7px; border: none; background: transparent;
+  outline: none; transition: all 0.22s; white-space: nowrap;
+}
+.tab:hover { color: var(--text); background: var(--surface2); }
+.tab.active { color: #000; background: var(--accent); box-shadow: 0 0 18px var(--accent-glow); }
 
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+/* ═══════════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════════ */
+.panel { display: none; padding-top: 24px; }
+.panel.active { display: block; }
 
-  .input-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--muted);
-  }
+/* ═══════════════════════════════════════════════
+   SEARCH ROW
+═══════════════════════════════════════════════ */
+.search-row {
+  display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 18px;
+  backdrop-filter: blur(16px); margin-bottom: 22px;
+}
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field-label { font-size: 0.56rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
+input[type="text"], select {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 7px; color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem; padding: 8px 12px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="text"]:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.symbol-in { width: 110px; text-transform: uppercase; font-weight: 500; letter-spacing: 2px; }
+select { appearance: none; cursor: pointer; width: 70px; text-align: center; }
+.year-in { width: 76px; }
+.vs-sep { padding-bottom: 8px; color: var(--muted); font-size: 0.75rem; }
 
-  input[type="text"], select {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.9rem;
-    padding: 10px 14px;
-    outline: none;
-    transition: border-color 0.2s;
-    min-width: 80px;
-  }
+.btn {
+  background: var(--accent); color: #000; border: none;
+  border-radius: 7px; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; font-weight: 500; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 8px 20px; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+  box-shadow: 0 0 16px var(--accent-glow); align-self: flex-end;
+}
+.btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 24px var(--accent-glow); }
+.btn:active { transform: translateY(0); }
 
-  input[type="text"]:focus, select:focus {
-    border-color: var(--accent);
-  }
+.btn-outline {
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--accent);
+  box-shadow: none;
+}
+.btn-outline:hover { background: var(--accent-dim); filter: none; }
 
-  .symbol-input { text-transform: uppercase; width: 120px; }
+/* ═══════════════════════════════════════════════
+   HEALTH SCORE WIDGET
+═══════════════════════════════════════════════ */
+.health-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 24px;
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; gap: 24px;
+  margin-bottom: 6px; animation: fadeUp 0.35s ease;
+  flex-wrap: wrap;
+}
 
-  select {
-    appearance: none;
-    cursor: pointer;
-  }
+.score-ring-wrap { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
 
-  .btn {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 10px 24px;
-    cursor: pointer;
-    transition: all 0.2s;
-    align-self: flex-end;
-    white-space: nowrap;
-  }
+.score-ring {
+  width: 84px; height: 84px;
+  transform: rotate(-90deg);
+}
 
-  .btn:hover {
-    background: #00e68a;
-    transform: translateY(-1px);
-  }
+.score-ring-bg { fill: none; stroke: var(--border2); stroke-width: 7; }
+.score-ring-fill { fill: none; stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1), stroke 0.4s; }
 
-  .btn:active { transform: translateY(0); }
+.score-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 1.4rem; color: var(--text);
+}
 
-  .btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-  }
+.health-info { flex: 1; min-width: 160px; }
+.health-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
+.health-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.6; }
 
-  /* API KEY INPUT */
-  .api-key-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+.health-bars { flex: 2; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }
 
-  .api-key-bar .input-label { margin-bottom: 0; }
+.hbar-row { display: flex; align-items: center; gap: 10px; }
+.hbar-label { font-size: 0.62rem; color: var(--muted); width: 110px; flex-shrink: 0; }
+.hbar-track {
+  flex: 1; height: 5px; border-radius: 100px;
+  background: var(--border2); overflow: hidden;
+}
+.hbar-fill {
+  height: 100%; border-radius: 100px;
+  transition: width 1s cubic-bezier(0.22,1,0.36,1);
+}
+.hbar-val { font-size: 0.62rem; color: var(--text2); width: 44px; text-align: right; }
 
-  .api-key-bar input {
-    flex: 1;
-    min-width: 200px;
-  }
+/* ═══════════════════════════════════════════════
+   OVERVIEW HEADER
+═══════════════════════════════════════════════ */
+.ov-header {
+  display: flex; align-items: baseline; gap: 14px;
+  margin-bottom: 10px; animation: fadeUp 0.35s ease; flex-wrap: wrap;
+}
+.ticker {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 2.8rem; color: var(--accent);
+  text-shadow: 0 0 32px var(--accent-glow);
+  letter-spacing: -1px; line-height: 1;
+}
+.company-name-txt { font-size: 0.85rem; color: var(--text); font-family: 'Syne', sans-serif; font-weight: 600; }
+.company-sector { font-size: 0.62rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
-  /* RESULTS */
-  .result-area {
-    min-height: 200px;
-  }
+/* ═══════════════════════════════════════════════
+   SECTION LABEL
+═══════════════════════════════════════════════ */
+.sec-label {
+  font-size: 0.58rem; text-transform: uppercase; letter-spacing: 2.5px;
+  color: var(--muted); margin: 22px 0 11px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sec-label::after { content:''; flex:1; height:1px; background: linear-gradient(90deg, var(--border2), transparent); }
 
-  /* OVERVIEW GRID */
-  .overview-header {
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
+/* ═══════════════════════════════════════════════
+   METRICS GRID
+═══════════════════════════════════════════════ */
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); gap: 9px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 15px 17px;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.22s, transform 0.22s, background 0.22s;
+  animation: fadeUp 0.4s ease both; cursor: default;
+}
+.card:hover { border-color: var(--border2); transform: translateY(-2px); background: var(--surface2); }
+.card-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 9px; }
+.card-value { font-size: 1.1rem; font-weight: 500; color: var(--text); line-height: 1; }
+.card-value.green { color: var(--up); }
+.card-value.red   { color: var(--down); }
+.card-value.blue  { color: var(--blue); }
+.card-value.gold  { color: var(--gold); }
 
-  .ticker-badge {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.5rem;
-    color: var(--accent);
-    letter-spacing: 2px;
-  }
+.val-chip { display: inline-block; font-size: 0.6rem; padding: 3px 9px; border-radius: 100px; margin-top: 7px; letter-spacing: 0.5px; }
+.chip-green { background: rgba(0,229,160,0.1); color: var(--up); border: 1px solid rgba(0,229,160,0.2); }
+.chip-gold  { background: rgba(247,201,72,0.1); color: var(--gold); border: 1px solid rgba(247,201,72,0.25); }
+.chip-red   { background: rgba(255,95,87,0.1); color: var(--down); border: 1px solid rgba(255,95,87,0.2); }
 
-  .company-name {
-    font-size: 1rem;
-    color: var(--muted);
-  }
+/* ═══════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════ */
+.tbl-wrap { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; backdrop-filter: blur(12px); }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+thead th {
+  background: var(--surface2); padding: 12px 18px; text-align: left;
+  font-size: 0.58rem; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--muted); border-bottom: 1px solid var(--border);
+}
+tbody td { padding: 13px 18px; border-bottom: 1px solid var(--border); color: var(--text); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { animation: fadeUp 0.35s ease both; transition: background 0.15s; }
+tbody tr:hover td { background: var(--surface2); }
+.metric-col { color: var(--muted); font-size: 0.7rem; }
+.pos { color: var(--up); }
+.neg { color: var(--down); }
 
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
-    margin-bottom: 24px;
-  }
+/* ═══════════════════════════════════════════════
+   EXPORT BAR
+═══════════════════════════════════════════════ */
+.export-bar {
+  display: flex; justify-content: flex-end; gap: 8px;
+  margin-top: 14px; flex-wrap: wrap;
+}
 
-  .metric-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px 20px;
-    transition: border-color 0.2s;
-    animation: fadeUp 0.4s ease both;
-  }
+/* ═══════════════════════════════════════════════
+   LOADING / ERROR / EMPTY
+═══════════════════════════════════════════════ */
+.loading { display: flex; align-items: center; gap: 12px; padding: 48px 0; color: var(--muted); font-size: 0.8rem; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.err-box { background: rgba(255,95,87,0.06); border: 1px solid rgba(255,95,87,0.2); border-radius: 10px; padding: 16px 20px; color: var(--down); font-size: 0.8rem; line-height: 1.6; }
+.empty { text-align: center; padding: 64px 0; color: var(--muted); font-size: 0.75rem; line-height: 2.2; }
+.empty-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; opacity: 0.2; }
 
-  .metric-card:hover { border-color: var(--muted); }
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
+footer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 28px;
+  background: linear-gradient(0deg, var(--bg) 55%, transparent);
+  font-size: 0.6rem; color: var(--muted); letter-spacing: 1.5px; gap: 10px;
+}
+footer b { color: var(--accent); font-weight: 500; }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════ */
+@keyframes fadeUp { from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:translateY(0);} }
 
-  .metric-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .metric-value {
-    font-family: 'DM Mono', monospace;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .metric-value.positive { color: var(--up); }
-  .metric-value.negative { color: var(--down); }
-  .metric-value.neutral { color: var(--accent3); }
-
-  .valuation-tag {
-    display: inline-block;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    padding: 3px 10px;
-    border-radius: 100px;
-    margin-top: 6px;
-  }
-
-  .tag-cheap { background: rgba(0,255,157,0.1); color: var(--up); border: 1px solid rgba(0,255,157,0.2); }
-  .tag-fair { background: rgba(124,107,255,0.1); color: var(--accent3); border: 1px solid rgba(124,107,255,0.2); }
-  .tag-expensive { background: rgba(255,77,109,0.1); color: var(--down); border: 1px solid rgba(255,77,109,0.2); }
-
-  /* COMPARISON TABLE */
-  .compare-table-wrap {
-    overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-  }
-
-  .compare-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-  }
-
-  .compare-table th {
-    background: var(--surface);
-    padding: 14px 20px;
-    text-align: left;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--muted);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .compare-table td {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-
-  .compare-table tr:last-child td { border-bottom: none; }
-
-  .compare-table tr {
-    animation: fadeUp 0.4s ease both;
-  }
-
-  .compare-table tr:nth-child(2) { animation-delay: 0.05s; }
-  .compare-table tr:nth-child(3) { animation-delay: 0.1s; }
-  .compare-table tr:nth-child(4) { animation-delay: 0.15s; }
-  .compare-table tr:nth-child(5) { animation-delay: 0.2s; }
-
-  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
-
-  .diff-positive { color: var(--up); }
-  .diff-negative { color: var(--down); }
-
-  .metric-name-col {
-    color: var(--muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-  }
-
-  .section-divider {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin: 28px 0 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .section-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* LOADING */
-  .loading {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 40px 0;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-  }
-
-  .spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ERROR */
-  .error-msg {
-    background: rgba(255,77,109,0.08);
-    border: 1px solid rgba(255,77,109,0.2);
-    border-radius: 8px;
-    padding: 16px 20px;
-    color: var(--down);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-  }
-
-  /* EMPTY STATE */
-  .empty-state {
-    text-align: center;
-    padding: 60px 0;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.8rem;
-  }
-
-  .empty-state .big-icon {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
-    opacity: 0.3;
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 600px) {
-    .search-bar { flex-direction: column; align-items: stretch; }
-    .btn { width: 100%; }
-    .input-group input { width: 100%; }
-  }
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .search-row { flex-direction: column; align-items: stretch; }
+  .btn { width: 100%; }
+  .symbol-in, .year-in, select { width: 100%; }
+  .ticker { font-size: 2.2rem; }
+  .vs-sep { display: none; }
+  .health-wrap { flex-direction: column; }
+}
 </style>
 </head>
 <body>
-<div class="container">
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="app">
+
+  <!-- HEADER -->
   <header>
-    <div class="logo">Stock<span>Lens</span></div>
-    <div class="api-note">Powered by Alpha Vantage</div>
+    <div>
+      <div class="logo">Stock<em>Lens</em></div>
+      <div class="logo-sub">Financial Analyzer</div>
+    </div>
+    <div class="header-actions">
+      <button class="theme-btn" id="themeBtn" title="Toggle theme" onclick="toggleTheme()">🌙</button>
+      <div class="credit-chip">by <b>Lidor.F</b></div>
+    </div>
   </header>
 
-  <!-- API Key -->
-  <div class="api-key-bar" style="margin-top:24px;">
-    <span class="input-label">API Key</span>
-    <input type="text" id="apiKey" value="FEBQJ92S7GZN24U1" placeholder="Enter Alpha Vantage API Key" style="flex:1; min-width:200px;" />
-    <span style="font-size:0.7rem; color:var(--muted); font-family:'DM Mono',monospace;">Free key: alphavantage.co</span>
+  <!-- API KEY -->
+  <div class="api-bar">
+    <span class="api-bar-label">API Key</span>
+    <input type="text" id="apiKey" value="FEBQJ92S7GZN24U1" spellcheck="false" />
   </div>
 
-  <!-- Tabs -->
+  <!-- TABS -->
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('overview')">📊 Stock Overview</button>
+    <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
     <button class="tab" onclick="switchTab('compare')">⚡ Quarter Compare</button>
   </div>
 
-  <!-- Overview Panel -->
+  <!-- ── OVERVIEW PANEL ── -->
   <div class="panel active" id="panel-overview">
-    <div class="search-bar">
-      <div class="input-group">
-        <span class="input-label">Symbol</span>
-        <input class="symbol-input" type="text" id="ov-symbol" placeholder="AAPL" maxlength="10" />
+    <div class="search-row">
+      <div class="field">
+        <span class="field-label">Symbol</span>
+        <input class="symbol-in" type="text" id="ov-sym" placeholder="AAPL" maxlength="10" />
       </div>
       <button class="btn" onclick="loadOverview()">Analyze →</button>
     </div>
-    <div class="result-area" id="ov-result">
-      <div class="empty-state">
-        <div class="big-icon">📈</div>
-        Enter a stock symbol to load financial overview
-      </div>
+    <div id="ov-result">
+      <div class="empty"><span class="empty-icon">📈</span>Enter a stock symbol to begin</div>
     </div>
   </div>
 
-  <!-- Compare Panel -->
+  <!-- ── COMPARE PANEL ── -->
   <div class="panel" id="panel-compare">
-    <div class="search-bar">
-      <div class="input-group">
-        <span class="input-label">Symbol</span>
-        <input class="symbol-input" type="text" id="cmp-symbol" placeholder="AAPL" maxlength="10" />
+    <div class="search-row">
+      <div class="field">
+        <span class="field-label">Symbol</span>
+        <input class="symbol-in" type="text" id="cmp-sym" placeholder="AAPL" maxlength="10" />
       </div>
-      <div class="input-group">
-        <span class="input-label">Quarter 1</span>
-        <select id="cmp-q1">
-          <option>Q1</option><option>Q2</option><option selected>Q3</option><option>Q4</option>
-        </select>
+      <div class="field">
+        <span class="field-label">Q1</span>
+        <select id="cq1"><option>Q1</option><option>Q2</option><option selected>Q3</option><option>Q4</option></select>
       </div>
-      <div class="input-group">
-        <span class="input-label">Year 1</span>
-        <input type="text" id="cmp-y1" value="2024" style="width:80px;" maxlength="4" />
+      <div class="field">
+        <span class="field-label">Year</span>
+        <input class="year-in" type="text" id="cy1" value="2024" maxlength="4" />
       </div>
-      <div style="align-self:flex-end; padding-bottom:10px; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.8rem;">vs</div>
-      <div class="input-group">
-        <span class="input-label">Quarter 2</span>
-        <select id="cmp-q2">
-          <option>Q1</option><option>Q2</option><option>Q3</option><option selected>Q4</option>
-        </select>
+      <div class="vs-sep">vs</div>
+      <div class="field">
+        <span class="field-label">Q2</span>
+        <select id="cq2"><option>Q1</option><option>Q2</option><option>Q3</option><option selected>Q4</option></select>
       </div>
-      <div class="input-group">
-        <span class="input-label">Year 2</span>
-        <input type="text" id="cmp-y2" value="2023" style="width:80px;" maxlength="4" />
+      <div class="field">
+        <span class="field-label">Year</span>
+        <input class="year-in" type="text" id="cy2" value="2023" maxlength="4" />
       </div>
-      <button class="btn" onclick="loadComparison()">Compare →</button>
+      <button class="btn" onclick="loadCompare()">Compare →</button>
     </div>
-    <div class="result-area" id="cmp-result">
-      <div class="empty-state">
-        <div class="big-icon">⚡</div>
-        Select two quarters to compare earnings data
-      </div>
+    <div id="cmp-result">
+      <div class="empty"><span class="empty-icon">⚡</span>Select two quarters to compare</div>
     </div>
   </div>
 
 </div>
 
-<script>
-const BASE = 'https://www.alphavantage.co/query';
-const getKey = () => document.getElementById('apiKey').value.trim();
+<footer>StockLens · <b>Lidor.F</b></footer>
 
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['overview','compare'][i] === name));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(`panel-${name}`).classList.add('active');
+<script>
+/* ═══════════════════════════════════════════════
+   SMOOTH CANDLESTICK BACKGROUND
+═══════════════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, candles=[], tickerItems=[];
+  const CWIDTH = 26, SPEED = 0.28;
+
+  const syms=['AAPL','MSFT','TSLA','NVDA','AMZN','GOOG','META','JPM','V','SPY','QQQ','NFLX','AMD','INTC'];
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function genCandles(){
+    candles = [];
+    const cols = Math.ceil(W / CWIDTH) + 6;
+    let price = 140 + Math.random()*80;
+    for(let i=0; i<cols; i++){
+      const open = price;
+      price += (Math.random()-0.47)*10;
+      const close = price;
+      candles.push({
+        open, close,
+        high: Math.max(open,close) + Math.random()*7,
+        low:  Math.min(open,close) - Math.random()*7,
+        x: i * CWIDTH
+      });
+    }
+  }
+
+  function genTicker(){
+    tickerItems = [];
+    for(let i=0;i<14;i++){
+      const chg = (Math.random()*7-3.5);
+      tickerItems.push({
+        sym: syms[i % syms.length],
+        val: (Math.random()*480+40).toFixed(2),
+        chg: chg.toFixed(2),
+        x: (W/14)*i,
+        speed: 0.25 + i*0.018
+      });
+    }
+  }
+
+  function init(){ resize(); genCandles(); genTicker(); }
+  init();
+
+  // Smooth resize — debounced, just re-add missing candles
+  let resizeTimer;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(()=>{
+      resize();
+      // extend candles if needed
+      while(candles.length * CWIDTH + offsetX < W + CWIDTH*4){
+        const last = candles[candles.length-1];
+        let p = last.close; p += (Math.random()-0.47)*10;
+        candles.push({
+          open:last.close, close:p,
+          high:Math.max(last.close,p)+Math.random()*7,
+          low: Math.min(last.close,p)-Math.random()*7,
+          x: last.x + CWIDTH
+        });
+      }
+      // reset ticker x positions
+      tickerItems.forEach((t,i)=>{ t.x = (W/14)*i; });
+    }, 200);
+  });
+
+  let offsetX = 0;
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(0,229,160,0.032)';
+    ctx.lineWidth = 1;
+    for(let y=0;y<H;y+=54){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+    }
+    for(let x=0;x<W;x+=72){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    }
+
+    // Advance offset — constant speed, no jumps
+    offsetX -= SPEED;
+    // When a full candle has scrolled off left, remove it and adjust
+    if(offsetX <= -CWIDTH){
+      offsetX += CWIDTH;
+      candles.shift();
+      candles.forEach(c=>c.x -= CWIDTH);
+      // append new candle at right
+      const last = candles[candles.length-1];
+      let p = last.close; p += (Math.random()-0.47)*10;
+      candles.push({
+        open:last.close, close:p,
+        high:Math.max(last.close,p)+Math.random()*7,
+        low: Math.min(last.close,p)-Math.random()*7,
+        x: last.x + CWIDTH
+      });
+    }
+
+    // Price-to-Y mapping
+    const vals = candles.flatMap(c=>[c.high,c.low]);
+    const minP = Math.min(...vals), maxP = Math.max(...vals), range = maxP-minP || 1;
+    const padT = H*0.1, padB = H*0.2, chartH = H-padT-padB;
+    const py = v => padT + (1-(v-minP)/range)*chartH;
+
+    // Ghost line
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(0,229,160,0.06)';
+    ctx.lineWidth = 1.5;
+    candles.forEach((c,i)=>{
+      const x = c.x + offsetX + 9, y = py(c.close);
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+
+    // Candle bodies
+    candles.forEach(c=>{
+      const x = c.x + offsetX;
+      const isUp = c.close >= c.open;
+      const col = isUp ? 'rgba(0,229,160,' : 'rgba(255,95,87,';
+      const oY=py(c.open), cY=py(c.close), hY=py(c.high), lY=py(c.low);
+      const bTop=Math.min(oY,cY), bH=Math.max(Math.abs(cY-oY),2);
+
+      ctx.strokeStyle = col+'0.28)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x+9,hY); ctx.lineTo(x+9,lY); ctx.stroke();
+
+      ctx.fillStyle   = col+(isUp?'0.16)':'0.12)');
+      ctx.strokeStyle = col+'0.42)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(x+3,bTop,12,bH,1);
+      else ctx.rect(x+3,bTop,12,bH);
+      ctx.fill(); ctx.stroke();
+
+      // Volume
+      const vol = Math.abs(c.close-c.open)/range*H*0.055;
+      ctx.fillStyle = isUp?'rgba(0,229,160,0.05)':'rgba(255,95,87,0.04)';
+      ctx.fillRect(x+3, H-padB+10, 12, vol+2);
+    });
+
+    // Scrolling ticker row
+    ctx.font = '10px JetBrains Mono, monospace';
+    tickerItems.forEach(t=>{
+      t.x -= t.speed;
+      if(t.x < -150) t.x = W + 10;
+      const up = parseFloat(t.chg) >= 0;
+      ctx.fillStyle = up ? 'rgba(0,229,160,0.18)' : 'rgba(255,95,87,0.16)';
+      ctx.fillText(`${t.sym}  $${t.val}  ${up?'+':''}${t.chg}%`, t.x, 19);
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════ */
+function toggleTheme(){
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme', isDark?'light':'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
 }
 
-// ---- HELPERS ----
-function fmt(val) {
-  const n = parseFloat(val);
-  if (isNaN(n)) return val || '—';
-  if (Math.abs(n) >= 1e12) return (n/1e12).toFixed(2) + 'T';
-  if (Math.abs(n) >= 1e9) return (n/1e9).toFixed(2) + 'B';
-  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(2) + 'M';
-  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1) + 'K';
+/* ═══════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════ */
+const BASE = 'https://www.alphavantage.co/query';
+const key = () => document.getElementById('apiKey').value.trim();
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['overview','compare'][i]===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`panel-${t}`).classList.add('active');
+}
+
+function fmt(v){
+  const n=parseFloat(v); if(isNaN(n)) return v||'—';
+  const a=Math.abs(n);
+  if(a>=1e12) return (n/1e12).toFixed(2)+'T';
+  if(a>=1e9)  return (n/1e9).toFixed(2)+'B';
+  if(a>=1e6)  return (n/1e6).toFixed(2)+'M';
+  if(a>=1e3)  return (n/1e3).toFixed(1)+'K';
   return n.toFixed(2);
 }
+function pct(v){ const n=parseFloat(v); return isNaN(n)?(v||'—'):(n*100).toFixed(2)+'%'; }
+function raw(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
 
-function fmtPct(val) {
-  const n = parseFloat(val);
-  if (isNaN(n)) return val || '—';
-  return (n * 100).toFixed(2) + '%';
+const loading = () => `<div class="loading"><div class="spinner"></div>Fetching data…</div>`;
+const errBox  = m => `<div class="err-box">⚠ ${m}</div>`;
+
+/* ═══════════════════════════════════════════════
+   HEALTH SCORE
+═══════════════════════════════════════════════ */
+function calcHealth(d){
+  let score = 0, max = 0;
+  const add = (val, weight, good, bad) => {
+    const n = parseFloat(val);
+    if(!isNaN(n)){
+      max += weight;
+      if(n >= good) score += weight;
+      else if(n >= bad) score += weight * ((n-bad)/(good-bad));
+    }
+  };
+  add(d.PERatio,        15, 5, 40, true);   // lower is better — invert
+  const pe = parseFloat(d.PERatio);
+  if(!isNaN(pe)){ max+=15; if(pe>0&&pe<40) score+=15*Math.max(0,1-(pe-5)/35); }
+
+  add(d.ProfitMargin,   20, 0.20, 0.0);
+  add(d.ReturnOnEquityTTM, 20, 0.15, 0.0);
+  add(d.OperatingMarginTTM, 15, 0.15, 0.0);
+  add(d.DividendYield,  10, 0.02, 0.0);
+  add(d.EPS,            20, 2, 0);
+
+  const pct100 = max > 0 ? Math.round((score/max)*100) : 0;
+  return Math.min(100, Math.max(0, pct100));
 }
 
-function valuationTag(pe) {
-  const n = parseFloat(pe);
-  if (isNaN(n)) return '';
-  if (n < 15) return '<span class="valuation-tag tag-cheap">Undervalued</span>';
-  if (n <= 25) return '<span class="valuation-tag tag-fair">Fairly Valued</span>';
-  return '<span class="valuation-tag tag-expensive">Overvalued</span>';
+function scoreColor(s){
+  if(s >= 70) return 'var(--up)';
+  if(s >= 45) return 'var(--gold)';
+  return 'var(--down)';
 }
 
-function diffClass(n) { return n > 0 ? 'diff-positive' : n < 0 ? 'diff-negative' : ''; }
-
-function loading() {
-  return `<div class="loading"><div class="spinner"></div>Fetching data from Alpha Vantage...</div>`;
+function scoreLabel(s){
+  if(s >= 75) return ['Strong Buy', 'Solid fundamentals across the board.'];
+  if(s >= 60) return ['Bullish', 'Good fundamentals with minor concerns.'];
+  if(s >= 45) return ['Neutral', 'Mixed signals — worth deeper research.'];
+  if(s >= 30) return ['Caution', 'Weak metrics in several areas.'];
+  return ['Avoid', 'Poor fundamentals across multiple dimensions.'];
 }
 
-function error(msg) {
-  return `<div class="error-msg">⚠ ${msg}</div>`;
+function renderHealth(d){
+  const score = calcHealth(d);
+  const color = scoreColor(score);
+  const [label, desc] = scoreLabel(score);
+  const circumference = 2 * Math.PI * 34;
+  const offset = circumference * (1 - score/100);
+
+  const bars = [
+    { label:'Profit Margin',    val: raw(d.ProfitMargin),        fmt: v=>(v*100).toFixed(1)+'%', max:0.4 },
+    { label:'Return on Equity', val: raw(d.ReturnOnEquityTTM),   fmt: v=>(v*100).toFixed(1)+'%', max:0.4 },
+    { label:'Oper. Margin',     val: raw(d.OperatingMarginTTM),  fmt: v=>(v*100).toFixed(1)+'%', max:0.4 },
+    { label:'EPS',              val: raw(d.EPS),                 fmt: v=>v.toFixed(2),           max:10  },
+  ];
+
+  const barHtml = bars.map(b=>{
+    if(b.val===null) return '';
+    const pct = Math.max(0, Math.min(100, (b.val/b.max)*100));
+    const bcolor = b.val > 0 ? 'var(--up)' : 'var(--down)';
+    return `<div class="hbar-row">
+      <div class="hbar-label">${b.label}</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${bcolor}"></div></div>
+      <div class="hbar-val">${b.fmt(b.val)}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="health-wrap">
+    <div class="score-ring-wrap">
+      <svg class="score-ring" viewBox="0 0 84 84">
+        <circle class="score-ring-bg" cx="42" cy="42" r="34"/>
+        <circle class="score-ring-fill" cx="42" cy="42" r="34"
+          stroke="${color}"
+          stroke-dasharray="${circumference}"
+          stroke-dashoffset="${offset}"/>
+      </svg>
+      <div class="score-num" style="color:${color}">${score}</div>
+    </div>
+    <div class="health-info">
+      <div class="health-title" style="color:${color}">${label}</div>
+      <div class="health-desc">${desc}<br><span style="opacity:0.6">Score: ${score}/100</span></div>
+    </div>
+    <div class="health-bars">${barHtml}</div>
+  </div>`;
 }
 
-// ---- OVERVIEW ----
-async function loadOverview() {
-  const symbol = document.getElementById('ov-symbol').value.trim().toUpperCase();
-  if (!symbol) return;
+/* ═══════════════════════════════════════════════
+   CSV EXPORT
+═══════════════════════════════════════════════ */
+function exportCSV(rows, filename){
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// Store last fetched data for export
+let _lastOverviewData = null;
+let _lastCompareData  = null;
+
+/* ═══════════════════════════════════════════════
+   VALUATION CHIP
+═══════════════════════════════════════════════ */
+function valChip(pe){
+  const n=parseFloat(pe); if(isNaN(n)) return '';
+  if(n<15)  return '<div class="val-chip chip-green">Undervalued</div>';
+  if(n<=25) return '<div class="val-chip chip-gold">Fairly Valued</div>';
+  return '<div class="val-chip chip-red">Overvalued</div>';
+}
+
+/* ═══════════════════════════════════════════════
+   OVERVIEW
+═══════════════════════════════════════════════ */
+async function loadOverview(){
+  const sym = document.getElementById('ov-sym').value.trim().toUpperCase();
+  if(!sym) return;
   const el = document.getElementById('ov-result');
   el.innerHTML = loading();
 
-  try {
-    const res = await fetch(`${BASE}?function=OVERVIEW&symbol=${symbol}&apikey=${getKey()}`);
-    const d = await res.json();
+  try{
+    // Fetch OVERVIEW + INCOME_STATEMENT in parallel
+    const [resOv, resInc, resBal] = await Promise.all([
+      fetch(`${BASE}?function=OVERVIEW&symbol=${sym}&apikey=${key()}`),
+      fetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${key()}`),
+      fetch(`${BASE}?function=BALANCE_SHEET&symbol=${sym}&apikey=${key()}`)
+    ]);
 
-    if (!d.Symbol) {
-      el.innerHTML = error('No data found. Check symbol or API key. Free tier: 25 requests/day.');
-      return;
-    }
+    const [dOv, dInc, dBal] = await Promise.all([resOv.json(), resInc.json(), resBal.json()]);
 
-    const metrics = [
-      { label: 'P/E Ratio', value: d.PERatio, extra: valuationTag(d.PERatio) },
-      { label: 'PEG Ratio', value: d.PEGRatio },
-      { label: 'EPS', value: d.EPS },
-      { label: 'Market Cap', value: fmt(d.MarketCapitalization) },
-      { label: 'Revenue (TTM)', value: fmt(d.RevenueTTM) },
-      { label: 'Profit Margin', value: fmtPct(d.ProfitMargin) },
-      { label: 'Operating Margin', value: fmtPct(d.OperatingMarginTTM) },
-      { label: 'Return on Assets', value: fmtPct(d.ReturnOnAssetsTTM) },
-      { label: 'Return on Equity', value: fmtPct(d.ReturnOnEquityTTM) },
-      { label: 'EV/Revenue', value: d.EnterpriseValueToRevenue },
-      { label: 'EV/EBITDA', value: d.EnterpriseValueToEBITDA },
+    if(!dOv.Symbol){ el.innerHTML = errBox('No data found. Check symbol or API key. (Free tier: 25 req/day)'); return; }
+
+    _lastOverviewData = { overview: dOv, income: dInc, balance: dBal, sym };
+
+    // Latest annual income + balance rows
+    const latestInc = dInc?.annualReports?.[0] || {};
+    const latestBal = dBal?.annualReports?.[0] || {};
+
+    const fundamentals = [
+      {label:'P/E Ratio',        val:dOv.PERatio,                      extra:valChip(dOv.PERatio)},
+      {label:'PEG Ratio',        val:dOv.PEGRatio},
+      {label:'EPS',              val:dOv.EPS},
+      {label:'EV / Revenue',     val:dOv.EnterpriseValueToRevenue},
+      {label:'EV / EBITDA',      val:dOv.EnterpriseValueToEBITDA},
+      {label:'Market Cap',       val:fmt(dOv.MarketCapitalization),     cls:'blue'},
+      {label:'Revenue TTM',      val:fmt(dOv.RevenueTTM),               cls:'blue'},
+      {label:'Profit Margin',    val:pct(dOv.ProfitMargin),             cls:parseFloat(dOv.ProfitMargin)>0.15?'green':'red'},
+      {label:'Operating Margin', val:pct(dOv.OperatingMarginTTM),      cls:parseFloat(dOv.OperatingMarginTTM)>0?'green':'red'},
+      {label:'Return on Assets', val:pct(dOv.ReturnOnAssetsTTM),       cls:'green'},
+      {label:'Return on Equity', val:pct(dOv.ReturnOnEquityTTM),       cls:'green'},
     ];
 
-    const divMetrics = [
-      { label: 'Dividend Yield (Annual)', value: fmtPct(d.DividendYield) },
-      { label: 'Dividend Yield (Monthly)', value: (() => { const n = parseFloat(d.DividendYield); return isNaN(n) ? '—' : (n/12*100).toFixed(3)+'%'; })() },
-      { label: 'Dividend / Share', value: d.DividendPerShare },
-      { label: 'Payout Ratio', value: fmtPct(d.PayoutRatio) },
+    const incomeMetrics = [
+      {label:'Total Revenue',       val:fmt(latestInc.totalRevenue),       cls:'blue'},
+      {label:'Gross Profit',        val:fmt(latestInc.grossProfit),        cls:'green'},
+      {label:'Operating Income',    val:fmt(latestInc.operatingIncome),    cls: parseFloat(latestInc.operatingIncome)>0?'green':'red'},
+      {label:'Net Income',          val:fmt(latestInc.netIncome),          cls: parseFloat(latestInc.netIncome)>0?'green':'red'},
+      {label:'EBITDA',              val:fmt(latestInc.ebitda),             cls:'blue'},
+      {label:'R&D Expense',         val:fmt(latestInc.researchAndDevelopment)},
+      {label:'Interest Expense',    val:fmt(latestInc.interestExpense)},
     ];
 
-    const cards = (arr) => arr.map((m, i) => `
-      <div class="metric-card" style="animation-delay:${i*0.04}s">
-        <div class="metric-label">${m.label}</div>
-        <div class="metric-value">${m.value || '—'}</div>
-        ${m.extra || ''}
+    const balanceMetrics = [
+      {label:'Total Assets',        val:fmt(latestBal.totalAssets),        cls:'blue'},
+      {label:'Total Liabilities',   val:fmt(latestBal.totalLiabilities),   cls:'red'},
+      {label:'Shareholder Equity',  val:fmt(latestBal.totalShareholderEquity), cls:'green'},
+      {label:'Cash & Equivalents',  val:fmt(latestBal.cashAndCashEquivalentsAtCarryingValue), cls:'green'},
+      {label:'Short-term Debt',     val:fmt(latestBal.shortTermDebt)},
+      {label:'Long-term Debt',      val:fmt(latestBal.longTermDebt),       cls:'red'},
+      {label:'Current Ratio',       val:(()=>{ const a=parseFloat(latestBal.totalCurrentAssets), b=parseFloat(latestBal.totalCurrentLiabilities); return (a&&b)?( a/b).toFixed(2):'—'; })(),
+       cls:(()=>{ const a=parseFloat(latestBal.totalCurrentAssets), b=parseFloat(latestBal.totalCurrentLiabilities); const r=a&&b?a/b:0; return r>=2?'green':r>=1?'gold':'red'; })()},
+    ];
+
+    const divs = [
+      {label:'Div. Yield (Annual)',  val:pct(dOv.DividendYield),           cls:'gold'},
+      {label:'Div. Yield (Monthly)', val:(()=>{ const n=parseFloat(dOv.DividendYield); return isNaN(n)?'—':(n/12*100).toFixed(3)+'%'; })(), cls:'gold'},
+      {label:'Dividend / Share',     val:dOv.DividendPerShare},
+      {label:'Payout Ratio',         val:pct(dOv.PayoutRatio)},
+    ];
+
+    const cards = arr => arr.map((m,i)=>`
+      <div class="card" style="animation-delay:${i*0.04}s">
+        <div class="card-label">${m.label}</div>
+        <div class="card-value ${m.cls||''}">${m.val||'—'}</div>
+        ${m.extra||''}
       </div>`).join('');
 
+    const fiscalNote = latestInc.fiscalDateEnding ? `Fiscal year ending: ${latestInc.fiscalDateEnding}` : '';
+
     el.innerHTML = `
-      <div class="overview-header">
-        <span class="ticker-badge">${d.Symbol}</span>
-        <span class="company-name">${d.Name || ''} · ${d.Sector || ''}</span>
+      <div class="ov-header">
+        <div class="ticker">${dOv.Symbol}</div>
+        <div>
+          <div class="company-name-txt">${dOv.Name||''}</div>
+          <div class="company-sector">${dOv.Sector||''} · ${dOv.Exchange||''}</div>
+        </div>
       </div>
-      <div class="section-divider">Valuation & Fundamentals</div>
-      <div class="metrics-grid">${cards(metrics)}</div>
-      <div class="section-divider">Dividends</div>
-      <div class="metrics-grid">${cards(divMetrics)}</div>
-    `;
-  } catch(e) {
-    el.innerHTML = error('Network error. Check CORS — run locally or use a proxy.');
+
+      <div class="sec-label">Health Score</div>
+      ${renderHealth(dOv)}
+
+      <div class="sec-label">Valuation & Fundamentals</div>
+      <div class="metrics-grid">${cards(fundamentals)}</div>
+
+      <div class="sec-label">Income Statement ${fiscalNote?`<span style="font-size:0.55rem;letter-spacing:1px;opacity:0.5">${fiscalNote}</span>`:''}</div>
+      <div class="metrics-grid">${cards(incomeMetrics)}</div>
+
+      <div class="sec-label">Balance Sheet</div>
+      <div class="metrics-grid">${cards(balanceMetrics)}</div>
+
+      <div class="sec-label">Dividends</div>
+      <div class="metrics-grid">${cards(divs)}</div>
+
+      <div class="export-bar">
+        <button class="btn btn-outline" onclick="exportOverview()">⬇ Export CSV</button>
+      </div>`;
+
+  }catch(e){
+    el.innerHTML = errBox('Network error. Try deploying to GitHub Pages.');
   }
 }
 
-// ---- COMPARISON ----
-async function loadComparison() {
-  const symbol = document.getElementById('cmp-symbol').value.trim().toUpperCase();
-  const q1 = document.getElementById('cmp-q1').value;
-  const y1 = document.getElementById('cmp-y1').value;
-  const q2 = document.getElementById('cmp-q2').value;
-  const y2 = document.getElementById('cmp-y2').value;
-  if (!symbol) return;
+function exportOverview(){
+  if(!_lastOverviewData) return;
+  const d = _lastOverviewData.overview;
+  const inc = _lastOverviewData.income?.annualReports?.[0]||{};
+  const bal = _lastOverviewData.balance?.annualReports?.[0]||{};
+  const rows = [
+    ['Metric','Value'],
+    ['Symbol', d.Symbol], ['Name', d.Name], ['Sector', d.Sector], ['Exchange', d.Exchange],
+    ['P/E Ratio', d.PERatio], ['PEG Ratio', d.PEGRatio], ['EPS', d.EPS],
+    ['Market Cap', d.MarketCapitalization], ['Revenue TTM', d.RevenueTTM],
+    ['Profit Margin', d.ProfitMargin], ['Operating Margin', d.OperatingMarginTTM],
+    ['Return on Assets', d.ReturnOnAssetsTTM], ['Return on Equity', d.ReturnOnEquityTTM],
+    ['EV/Revenue', d.EnterpriseValueToRevenue], ['EV/EBITDA', d.EnterpriseValueToEBITDA],
+    ['--- Income Statement ---',''],
+    ['Total Revenue', inc.totalRevenue], ['Gross Profit', inc.grossProfit],
+    ['Operating Income', inc.operatingIncome], ['Net Income', inc.netIncome],
+    ['EBITDA', inc.ebitda], ['R&D', inc.researchAndDevelopment],
+    ['--- Balance Sheet ---',''],
+    ['Total Assets', bal.totalAssets], ['Total Liabilities', bal.totalLiabilities],
+    ['Shareholder Equity', bal.totalShareholderEquity],
+    ['Cash', bal.cashAndCashEquivalentsAtCarryingValue],
+    ['Short-term Debt', bal.shortTermDebt], ['Long-term Debt', bal.longTermDebt],
+    ['--- Dividends ---',''],
+    ['Dividend Yield', d.DividendYield], ['Dividend/Share', d.DividendPerShare], ['Payout Ratio', d.PayoutRatio],
+  ];
+  exportCSV(rows, `${_lastOverviewData.sym}_overview.csv`);
+}
 
+/* ═══════════════════════════════════════════════
+   QUARTER COMPARE
+═══════════════════════════════════════════════ */
+async function loadCompare(){
+  const sym = document.getElementById('cmp-sym').value.trim().toUpperCase();
+  const q1=document.getElementById('cq1').value, y1=document.getElementById('cy1').value;
+  const q2=document.getElementById('cq2').value, y2=document.getElementById('cy2').value;
+  if(!sym) return;
   const el = document.getElementById('cmp-result');
   el.innerHTML = loading();
+  const qm = {Q1:'03',Q2:'06',Q3:'09',Q4:'12'};
 
-  const qMap = { Q1:'03', Q2:'06', Q3:'09', Q4:'12' };
+  try{
+    const [resEar, resInc] = await Promise.all([
+      fetch(`${BASE}?function=EARNINGS&symbol=${sym}&apikey=${key()}`),
+      fetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${key()}`)
+    ]);
+    const [dEar, dInc] = await Promise.all([resEar.json(), resInc.json()]);
 
-  try {
-    const res = await fetch(`${BASE}?function=EARNINGS&symbol=${symbol}&apikey=${getKey()}`);
-    const data = await res.json();
+    if(!dEar.quarterlyEarnings){ el.innerHTML = errBox('No earnings data. Check symbol/key.'); return; }
 
-    if (!data.quarterlyEarnings) {
-      el.innerHTML = error('No earnings data found. Check symbol or API key. Free tier: 25 requests/day.');
-      return;
+    const qe = dEar.quarterlyEarnings;
+    const qi = dInc?.quarterlyReports||[];
+
+    const findQ = (arr, yr, m) => arr.find(e => e.fiscalDateEnding?.startsWith(yr+'-'+m));
+
+    const e1 = findQ(qe, y1, qm[q1]), e2 = findQ(qe, y2, qm[q2]);
+    const i1 = findQ(qi, y1, qm[q1]), i2 = findQ(qi, y2, qm[q2]);
+
+    if(!e1||!e2){
+      const avail = qe.slice(0,8).map(e=>e.fiscalDateEnding).join(', ');
+      el.innerHTML = errBox(`Quarter not found. Available: ${avail}`); return;
     }
 
-    const qe = data.quarterlyEarnings;
+    _lastCompareData = { sym, q1, y1, q2, y2, e1, e2, i1, i2 };
 
-    function findQ(year, qMonth) {
-      return qe.find(e => e.fiscalDateEnding && e.fiscalDateEnding.startsWith(year + '-' + qMonth));
-    }
-
-    const d1 = findQ(y1, qMap[q1]);
-    const d2 = findQ(y2, qMap[q2]);
-
-    if (!d1 || !d2) {
-      const found = qe.slice(0,8).map(e => e.fiscalDateEnding).join(', ');
-      el.innerHTML = error(`Quarter not found. Available dates include: ${found}`);
-      return;
-    }
-
-    const rows = [
-      { name: 'Reported EPS', key: 'reportedEPS' },
-      { name: 'Estimated EPS', key: 'estimatedEPS' },
-      { name: 'Surprise EPS', key: 'surprise' },
-      { name: 'Surprise %', key: 'surprisePercentage', isPct: true },
+    const epsRows = [
+      {name:'Reported EPS',   k1:e1.reportedEPS,      k2:e2.reportedEPS},
+      {name:'Estimated EPS',  k1:e1.estimatedEPS,     k2:e2.estimatedEPS},
+      {name:'EPS Surprise',   k1:e1.surprise,         k2:e2.surprise},
+      {name:'Surprise %',     k1:e1.surprisePercentage, k2:e2.surprisePercentage, isPct:true},
     ];
 
-    const tableRows = rows.map((r, i) => {
-      const v1 = parseFloat(d1[r.key]);
-      const v2 = parseFloat(d2[r.key]);
-      const diff = v1 - v2;
-      const diffPct = v2 !== 0 ? (diff / Math.abs(v2) * 100) : 0;
-      const cls = diffClass(diff);
-      const format = r.isPct ? (n => isNaN(n) ? '—' : n.toFixed(2)+'%') : (n => isNaN(n) ? '—' : n.toFixed(4));
-      const diffStr = isNaN(diff) ? '—' : `<span class="${cls}">${diff >= 0 ? '+' : ''}${format(diff)} (${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(1)}%)</span>`;
+    const incRows = i1 && i2 ? [
+      {name:'Total Revenue',    k1:i1.totalRevenue,     k2:i2.totalRevenue,    big:true},
+      {name:'Gross Profit',     k1:i1.grossProfit,      k2:i2.grossProfit,     big:true},
+      {name:'Operating Income', k1:i1.operatingIncome,  k2:i2.operatingIncome, big:true},
+      {name:'Net Income',       k1:i1.netIncome,        k2:i2.netIncome,       big:true},
+      {name:'EBITDA',           k1:i1.ebitda,           k2:i2.ebitda,          big:true},
+    ] : [];
 
-      return `<tr style="animation-delay:${i*0.05}s">
-        <td class="metric-name-col">${r.name}</td>
-        <td>${format(v1)}</td>
-        <td>${format(v2)}</td>
-        <td>${diffStr}</td>
-      </tr>`;
-    }).join('');
+    function buildTable(rows){
+      return rows.map((r,i)=>{
+        const v1=parseFloat(r.k1), v2=parseFloat(r.k2);
+        const diff=v1-v2, dp=v2!==0?(diff/Math.abs(v2)*100):0;
+        const f = r.big ? n=>isNaN(n)?'—':fmt(n) : r.isPct ? n=>isNaN(n)?'—':n.toFixed(2)+'%' : n=>isNaN(n)?'—':n.toFixed(4);
+        const cls = diff>0?'pos':diff<0?'neg':'';
+        const ds = isNaN(diff)?'—':`<span class="${cls}">${diff>=0?'+':''}${f(diff)} (${dp>=0?'+':''}${dp.toFixed(1)}%)</span>`;
+        return `<tr style="animation-delay:${i*0.055}s">
+          <td class="metric-col">${r.name}</td>
+          <td>${f(v1)}</td><td>${f(v2)}</td><td>${ds}</td>
+        </tr>`;
+      }).join('');
+    }
 
     el.innerHTML = `
-      <div class="overview-header">
-        <span class="ticker-badge">${symbol}</span>
-        <span class="company-name">${q1} ${y1} vs ${q2} ${y2}</span>
+      <div class="ov-header">
+        <div class="ticker">${sym}</div>
+        <div>
+          <div class="company-name-txt">${q1} ${y1} vs ${q2} ${y2}</div>
+          <div class="company-sector">Quarterly Comparison</div>
+        </div>
       </div>
-      <div class="section-divider">Earnings Comparison</div>
-      <div class="compare-table-wrap">
-        <table class="compare-table">
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th>${q1} ${y1}</th>
-              <th>${q2} ${y2}</th>
-              <th>Difference</th>
-            </tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
+
+      <div class="sec-label">EPS & Earnings</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead>
+          <tbody>${buildTable(epsRows)}</tbody>
         </table>
       </div>
-      <div style="margin-top:16px; font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--muted);">
-        Fiscal date ${y1}: ${d1.fiscalDateEnding} &nbsp;·&nbsp; Fiscal date ${y2}: ${d2.fiscalDateEnding}
+
+      ${incRows.length ? `
+      <div class="sec-label">Income Statement</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead>
+          <tbody>${buildTable(incRows)}</tbody>
+        </table>
+      </div>` : '<div style="font-size:0.7rem;color:var(--muted);margin-top:12px">Income statement quarterly data unavailable for this symbol.</div>'}
+
+      <div style="margin-top:12px;font-size:0.6rem;color:var(--muted)">
+        Fiscal ${y1}: ${e1.fiscalDateEnding} · Fiscal ${y2}: ${e2.fiscalDateEnding}
       </div>
-    `;
-  } catch(e) {
-    el.innerHTML = error('Network error — CORS may block browser requests. Consider running via local server or proxy.');
+
+      <div class="export-bar">
+        <button class="btn btn-outline" onclick="exportCompare()">⬇ Export CSV</button>
+      </div>`;
+
+  }catch(e){
+    el.innerHTML = errBox('Network error.');
   }
 }
 
-// Enter key support
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    if (document.getElementById('panel-overview').classList.contains('active')) loadOverview();
-    else loadComparison();
+function exportCompare(){
+  if(!_lastCompareData) return;
+  const {sym,q1,y1,q2,y2,e1,e2,i1,i2} = _lastCompareData;
+  const rows = [
+    ['Metric', `${q1} ${y1}`, `${q2} ${y2}`, 'Difference', 'Change %'],
+  ];
+  const addRow = (name, v1s, v2s) => {
+    const v1=parseFloat(v1s), v2=parseFloat(v2s);
+    const diff=v1-v2, dp=v2!==0?(diff/Math.abs(v2)*100):0;
+    rows.push([name, isNaN(v1)?'—':v1, isNaN(v2)?'—':v2, isNaN(diff)?'—':diff.toFixed(4), isNaN(dp)?'—':dp.toFixed(2)+'%']);
+  };
+  addRow('Reported EPS',e1.reportedEPS,e2.reportedEPS);
+  addRow('Estimated EPS',e1.estimatedEPS,e2.estimatedEPS);
+  addRow('EPS Surprise',e1.surprise,e2.surprise);
+  addRow('Surprise %',e1.surprisePercentage,e2.surprisePercentage);
+  if(i1&&i2){
+    addRow('Total Revenue',i1.totalRevenue,i2.totalRevenue);
+    addRow('Gross Profit',i1.grossProfit,i2.grossProfit);
+    addRow('Operating Income',i1.operatingIncome,i2.operatingIncome);
+    addRow('Net Income',i1.netIncome,i2.netIncome);
+    addRow('EBITDA',i1.ebitda,i2.ebitda);
   }
+  exportCSV(rows, `${sym}_${q1}${y1}_vs_${q2}${y2}.csv`);
+}
+
+/* ── Enter key ── */
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  document.getElementById('panel-overview').classList.contains('active')?loadOverview():loadCompare();
 });
 </script>
 </body>
