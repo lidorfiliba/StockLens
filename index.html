@@ -132,7 +132,7 @@ tbody tr:hover td{background:var(--surface2);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:translateY(0);}}
 footer{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:10px 28px;background:linear-gradient(0deg,var(--bg) 55%,transparent);font-size:.6rem;color:var(--muted);letter-spacing:1.5px;gap:10px;}
 footer b{color:var(--accent);font-weight:500;}
-.donate-btn{background:transparent;border:1px solid rgba(0,112,186,0.4);color:#5aabff;border-radius:100px;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:1px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;text-decoration:none;}
+.donate-btn{background:transparent;border:1px solid rgba(0,112,186,0.4);color:#5aabff;border-radius:100px;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:1px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;text-decoration:none;}
 .donate-btn:hover{background:rgba(0,112,186,0.12);border-color:#0070BA;color:#fff;}
 @media(max-width:640px){
   .search-row{flex-direction:column;align-items:stretch;}
@@ -413,12 +413,8 @@ const delay   = ms => new Promise(r => setTimeout(r, ms));
 async function safeFetch(url){
   const r = await fetch(url);
   const d = await r.json();
-  console.log('API Response:', JSON.stringify(d).slice(0, 300));
-  if(d['Information']) {
-    if(d['Information'].toLowerCase().includes('api key') || d['Information'].toLowerCase().includes('invalid')) throw new Error('INVALID_KEY');
-    throw new Error('RATE_LIMIT');
-  }
   if(d['Note']) throw new Error('RATE_LIMIT');
+  if(d['Information']) throw new Error('DAILY_LIMIT');
   return d;
 }
 
@@ -566,8 +562,8 @@ async function loadOverview(){
       <div class="sec-label">Dividends</div><div class="metrics-grid">${cards(divs)}</div>
       <div class="export-bar"><button class="btn btn-outline" onclick="exportOverview()">⬇ Export CSV</button></div>`;
   } catch(e){
-    el.innerHTML = e.message==='INVALID_KEY'
-      ? errBox('Invalid API key. Check your key in Settings ⚙')
+    el.innerHTML = e.message==='DAILY_LIMIT'
+      ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
       : e.message==='RATE_LIMIT'
       ? errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
       : errBox('Network error. Try deploying to GitHub Pages.');
@@ -656,8 +652,8 @@ async function loadCompare(){
       <div style="margin-top:12px;font-size:.6rem;color:var(--muted)">Fiscal ${y1}: ${e1.fiscalDateEnding} · Fiscal ${y2}: ${e2.fiscalDateEnding}</div>
       <div class="export-bar"><button class="btn btn-outline" onclick="exportCompare()">⬇ Export CSV</button></div>`;
   } catch(e){
-    el.innerHTML = e.message==='INVALID_KEY'
-      ? errBox('Invalid API key. Check your key in Settings ⚙')
+    el.innerHTML = e.message==='DAILY_LIMIT'
+      ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
       : e.message==='RATE_LIMIT'
       ? errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
       : errBox('Network error.');
