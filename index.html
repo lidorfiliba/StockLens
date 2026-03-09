@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockLens — Financial Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #00ff9d;
+    --accent2: #ff6b35;
+    --accent3: #7c6bff;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --up: #00ff9d;
+    --down: #ff4d6d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,157,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,157,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+
+  .logo span { color: var(--accent); }
+
+  .api-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    background: var(--surface);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin: 32px 0 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    background: none;
+    border-left: none; border-right: none; border-top: none;
+    outline: none;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* PANELS */
+  .panel { display: none; padding: 32px 0; }
+  .panel.active { display: block; }
+
+  /* SEARCH BAR */
+  .search-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .input-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+
+  input[type="text"], select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 80px;
+  }
+
+  input[type="text"]:focus, select:focus {
+    border-color: var(--accent);
+  }
+
+  .symbol-input { text-transform: uppercase; width: 120px; }
+
+  select {
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-end;
+    white-space: nowrap;
+  }
+
+  .btn:hover {
+    background: #00e68a;
+    transform: translateY(-1px);
+  }
+
+  .btn:active { transform: translateY(0); }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* API KEY INPUT */
+  .api-key-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .api-key-bar .input-label { margin-bottom: 0; }
+
+  .api-key-bar input {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  /* RESULTS */
+  .result-area {
+    min-height: 200px;
+  }
+
+  /* OVERVIEW GRID */
+  .overview-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .ticker-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .company-name {
+    font-size: 1rem;
+    color: var(--muted);
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    transition: border-color 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .metric-card:hover { border-color: var(--muted); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .metric-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .metric-value.positive { color: var(--up); }
+  .metric-value.negative { color: var(--down); }
+  .metric-value.neutral { color: var(--accent3); }
+
+  .valuation-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-top: 6px;
+  }
+
+  .tag-cheap { background: rgba(0,255,157,0.1); color: var(--up); border: 1px solid rgba(0,255,157,0.2); }
+  .tag-fair { background: rgba(124,107,255,0.1); color: var(--accent3); border: 1px solid rgba(124,107,255,0.2); }
+  .tag-expensive { background: rgba(255,77,109,0.1); color: var(--down); border: 1px solid rgba(255,77,109,0.2); }
+
+  /* COMPARISON TABLE */
+  .compare-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  .compare-table th {
+    background: var(--surface);
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compare-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .compare-table tr:last-child td { border-bottom: none; }
+
+  .compare-table tr {
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .compare-table tr:nth-child(2) { animation-delay: 0.05s; }
+  .compare-table tr:nth-child(3) { animation-delay: 0.1s; }
+  .compare-table tr:nth-child(4) { animation-delay: 0.15s; }
+  .compare-table tr:nth-child(5) { animation-delay: 0.2s; }
+
+  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .diff-positive { color: var(--up); }
+  .diff-negative { color: var(--down); }
+
+  .metric-name-col {
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+  }
+
+  .section-divider {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin: 28px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 40px 0;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR */
+  .error-msg {
+    background: rgba(255,77,109,0.08);
+    border: 1px solid rgba(255,77,109,0.2);
+    border-radius: 8px;
+    padding: 16px 20px;
+    color: var(--down);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .empty-state .big-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    opacity: 0.3;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .search-bar { flex-direction: column; align-items: stretch; }
+    .btn { width: 100%; }
+    .input-group input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">Stock<span>Lens</span></div>
+    <div class="api-note">Powered by Alpha Vantage</div>
+  </header>
+
+  <!-- API Key -->
+  <div class="api-key-bar" style="margin-top:24px;">
+    <span class="input-label">API Key</span>
+    <input type="text" id="apiKey" value="FEBQJ92S7GZN24U1" placeholder="Enter Alpha Vantage API Key" style="flex:1; min-width:200px;" />
+    <span style="font-size:0.7rem; color:var(--muted); font-family:'DM Mono',monospace;">Free key: alphavantage.co</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview')">📊 Stock Overview</button>
+    <button class="tab" onclick="switchTab('compare')">⚡ Quarter Compare</button>
+  </div>
+
+  <!-- Overview Panel -->
+  <div class="panel active" id="panel-overview">
+    <div class="search-bar">
+      <div class="input-group">
+        <span class="input-label">Symbol</span>
+        <input class="symbol-input" type="text" id="ov-symbol" placeholder="AAPL" maxlength="10" />
+      </div>
+      <button class="btn" onclick="loadOverview()">Analyze →</button>
+    </div>
+    <div class="result-area" id="ov-result">
+      <div class="empty-state">
+        <div class="big-icon">📈</div>
+        Enter a stock symbol to load financial overview
+      </div>
+    </div>
+  </div>
+
+  <!-- Compare Panel -->
+  <div class="panel" id="panel-compare">
+    <div class="search-bar">
+      <div class="input-group">
+        <span class="input-label">Symbol</span>
+        <input class="symbol-input" type="text" id="cmp-symbol" placeholder="AAPL" maxlength="10" />
+      </div>
+      <div class="input-group">
+        <span class="input-label">Quarter 1</span>
+        <select id="cmp-q1">
+          <option>Q1</option><option>Q2</option><option selected>Q3</option><option>Q4</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <span class="input-label">Year 1</span>
+        <input type="text" id="cmp-y1" value="2024" style="width:80px;" maxlength="4" />
+      </div>
+      <div style="align-self:flex-end; padding-bottom:10px; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.8rem;">vs</div>
+      <div class="input-group">
+        <span class="input-label">Quarter 2</span>
+        <select id="cmp-q2">
+          <option>Q1</option><option>Q2</option><option>Q3</option><option selected>Q4</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <span class="input-label">Year 2</span>
+        <input type="text" id="cmp-y2" value="2023" style="width:80px;" maxlength="4" />
+      </div>
+      <button class="btn" onclick="loadComparison()">Compare →</button>
+    </div>
+    <div class="result-area" id="cmp-result">
+      <div class="empty-state">
+        <div class="big-icon">⚡</div>
+        Select two quarters to compare earnings data
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BASE = 'https://www.alphavantage.co/query';
+const getKey = () => document.getElementById('apiKey').value.trim();
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['overview','compare'][i] === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+}
+
+// ---- HELPERS ----
+function fmt(val) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return val || '—';
+  if (Math.abs(n) >= 1e12) return (n/1e12).toFixed(2) + 'T';
+  if (Math.abs(n) >= 1e9) return (n/1e9).toFixed(2) + 'B';
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n.toFixed(2);
+}
+
+function fmtPct(val) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return val || '—';
+  return (n * 100).toFixed(2) + '%';
+}
+
+function valuationTag(pe) {
+  const n = parseFloat(pe);
+  if (isNaN(n)) return '';
+  if (n < 15) return '<span class="valuation-tag tag-cheap">Undervalued</span>';
+  if (n <= 25) return '<span class="valuation-tag tag-fair">Fairly Valued</span>';
+  return '<span class="valuation-tag tag-expensive">Overvalued</span>';
+}
+
+function diffClass(n) { return n > 0 ? 'diff-positive' : n < 0 ? 'diff-negative' : ''; }
+
+function loading() {
+  return `<div class="loading"><div class="spinner"></div>Fetching data from Alpha Vantage...</div>`;
+}
+
+function error(msg) {
+  return `<div class="error-msg">⚠ ${msg}</div>`;
+}
+
+// ---- OVERVIEW ----
+async function loadOverview() {
+  const symbol = document.getElementById('ov-symbol').value.trim().toUpperCase();
+  if (!symbol) return;
+  const el = document.getElementById('ov-result');
+  el.innerHTML = loading();
+
+  try {
+    const res = await fetch(`${BASE}?function=OVERVIEW&symbol=${symbol}&apikey=${getKey()}`);
+    const d = await res.json();
+
+    if (!d.Symbol) {
+      el.innerHTML = error('No data found. Check symbol or API key. Free tier: 25 requests/day.');
+      return;
+    }
+
+    const metrics = [
+      { label: 'P/E Ratio', value: d.PERatio, extra: valuationTag(d.PERatio) },
+      { label: 'PEG Ratio', value: d.PEGRatio },
+      { label: 'EPS', value: d.EPS },
+      { label: 'Market Cap', value: fmt(d.MarketCapitalization) },
+      { label: 'Revenue (TTM)', value: fmt(d.RevenueTTM) },
+      { label: 'Profit Margin', value: fmtPct(d.ProfitMargin) },
+      { label: 'Operating Margin', value: fmtPct(d.OperatingMarginTTM) },
+      { label: 'Return on Assets', value: fmtPct(d.ReturnOnAssetsTTM) },
+      { label: 'Return on Equity', value: fmtPct(d.ReturnOnEquityTTM) },
+      { label: 'EV/Revenue', value: d.EnterpriseValueToRevenue },
+      { label: 'EV/EBITDA', value: d.EnterpriseValueToEBITDA },
+    ];
+
+    const divMetrics = [
+      { label: 'Dividend Yield (Annual)', value: fmtPct(d.DividendYield) },
+      { label: 'Dividend Yield (Monthly)', value: (() => { const n = parseFloat(d.DividendYield); return isNaN(n) ? '—' : (n/12*100).toFixed(3)+'%'; })() },
+      { label: 'Dividend / Share', value: d.DividendPerShare },
+      { label: 'Payout Ratio', value: fmtPct(d.PayoutRatio) },
+    ];
+
+    const cards = (arr) => arr.map((m, i) => `
+      <div class="metric-card" style="animation-delay:${i*0.04}s">
+        <div class="metric-label">${m.label}</div>
+        <div class="metric-value">${m.value || '—'}</div>
+        ${m.extra || ''}
+      </div>`).join('');
+
+    el.innerHTML = `
+      <div class="overview-header">
+        <span class="ticker-badge">${d.Symbol}</span>
+        <span class="company-name">${d.Name || ''} · ${d.Sector || ''}</span>
+      </div>
+      <div class="section-divider">Valuation & Fundamentals</div>
+      <div class="metrics-grid">${cards(metrics)}</div>
+      <div class="section-divider">Dividends</div>
+      <div class="metrics-grid">${cards(divMetrics)}</div>
+    `;
+  } catch(e) {
+    el.innerHTML = error('Network error. Check CORS — run locally or use a proxy.');
+  }
+}
+
+// ---- COMPARISON ----
+async function loadComparison() {
+  const symbol = document.getElementById('cmp-symbol').value.trim().toUpperCase();
+  const q1 = document.getElementById('cmp-q1').value;
+  const y1 = document.getElementById('cmp-y1').value;
+  const q2 = document.getElementById('cmp-q2').value;
+  const y2 = document.getElementById('cmp-y2').value;
+  if (!symbol) return;
+
+  const el = document.getElementById('cmp-result');
+  el.innerHTML = loading();
+
+  const qMap = { Q1:'03', Q2:'06', Q3:'09', Q4:'12' };
+
+  try {
+    const res = await fetch(`${BASE}?function=EARNINGS&symbol=${symbol}&apikey=${getKey()}`);
+    const data = await res.json();
+
+    if (!data.quarterlyEarnings) {
+      el.innerHTML = error('No earnings data found. Check symbol or API key. Free tier: 25 requests/day.');
+      return;
+    }
+
+    const qe = data.quarterlyEarnings;
+
+    function findQ(year, qMonth) {
+      return qe.find(e => e.fiscalDateEnding && e.fiscalDateEnding.startsWith(year + '-' + qMonth));
+    }
+
+    const d1 = findQ(y1, qMap[q1]);
+    const d2 = findQ(y2, qMap[q2]);
+
+    if (!d1 || !d2) {
+      const found = qe.slice(0,8).map(e => e.fiscalDateEnding).join(', ');
+      el.innerHTML = error(`Quarter not found. Available dates include: ${found}`);
+      return;
+    }
+
+    const rows = [
+      { name: 'Reported EPS', key: 'reportedEPS' },
+      { name: 'Estimated EPS', key: 'estimatedEPS' },
+      { name: 'Surprise EPS', key: 'surprise' },
+      { name: 'Surprise %', key: 'surprisePercentage', isPct: true },
+    ];
+
+    const tableRows = rows.map((r, i) => {
+      const v1 = parseFloat(d1[r.key]);
+      const v2 = parseFloat(d2[r.key]);
+      const diff = v1 - v2;
+      const diffPct = v2 !== 0 ? (diff / Math.abs(v2) * 100) : 0;
+      const cls = diffClass(diff);
+      const format = r.isPct ? (n => isNaN(n) ? '—' : n.toFixed(2)+'%') : (n => isNaN(n) ? '—' : n.toFixed(4));
+      const diffStr = isNaN(diff) ? '—' : `<span class="${cls}">${diff >= 0 ? '+' : ''}${format(diff)} (${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(1)}%)</span>`;
+
+      return `<tr style="animation-delay:${i*0.05}s">
+        <td class="metric-name-col">${r.name}</td>
+        <td>${format(v1)}</td>
+        <td>${format(v2)}</td>
+        <td>${diffStr}</td>
+      </tr>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div class="overview-header">
+        <span class="ticker-badge">${symbol}</span>
+        <span class="company-name">${q1} ${y1} vs ${q2} ${y2}</span>
+      </div>
+      <div class="section-divider">Earnings Comparison</div>
+      <div class="compare-table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>${q1} ${y1}</th>
+              <th>${q2} ${y2}</th>
+              <th>Difference</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px; font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--muted);">
+        Fiscal date ${y1}: ${d1.fiscalDateEnding} &nbsp;·&nbsp; Fiscal date ${y2}: ${d2.fiscalDateEnding}
+      </div>
+    `;
+  } catch(e) {
+    el.innerHTML = error('Network error — CORS may block browser requests. Consider running via local server or proxy.');
+  }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('panel-overview').classList.contains('active')) loadOverview();
+    else loadComparison();
+  }
+});
+</script>
+</body>
+</html>
