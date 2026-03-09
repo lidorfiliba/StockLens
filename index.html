@@ -413,6 +413,7 @@ const delay   = ms => new Promise(r => setTimeout(r, ms));
 async function safeFetch(url){
   const r = await fetch(url);
   const d = await r.json();
+  console.log('API Response:', JSON.stringify(d).slice(0, 300));
   if(d['Information']) {
     if(d['Information'].toLowerCase().includes('api key') || d['Information'].toLowerCase().includes('invalid')) throw new Error('INVALID_KEY');
     throw new Error('RATE_LIMIT');
