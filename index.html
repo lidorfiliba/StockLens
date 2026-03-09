@@ -134,6 +134,33 @@ footer{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;align-item
 footer b{color:var(--accent);font-weight:500;}
 .donate-btn{background:transparent;border:1px solid rgba(0,112,186,0.4);color:#5aabff;border-radius:100px;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:1px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;text-decoration:none;}
 .donate-btn:hover{background:rgba(0,112,186,0.12);border-color:#0070BA;color:#fff;}
+
+/* ── VS STYLES ── */
+.vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:20px;}
+.vs-col{display:flex;flex-direction:column;gap:8px;}
+.vs-ticker{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--accent);letter-spacing:-1px;line-height:1;}
+.vs-company{font-size:.75rem;color:var(--text2);margin-top:2px;}
+.vs-divider{display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--muted);padding-top:8px;}
+.vs-row{display:grid;grid-template-columns:1fr 120px 1fr;gap:0;border-bottom:1px solid var(--border);align-items:center;}
+.vs-row:last-child{border-bottom:none;}
+.vs-val{padding:11px 16px;font-size:.82rem;font-family:'JetBrains Mono',monospace;}
+.vs-val.left{text-align:right;border-right:1px solid var(--border);}
+.vs-val.right{text-align:left;border-left:1px solid var(--border);}
+.vs-val.winner{color:var(--up);font-weight:600;}
+.vs-val.loser{color:var(--muted);}
+.vs-metric{padding:11px 12px;font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);text-align:center;background:var(--surface);}
+.vs-tbl-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;backdrop-filter:blur(12px);margin-bottom:16px;}
+.vs-winner-banner{display:flex;align-items:center;justify-content:center;gap:16px;padding:20px;background:var(--accent-dim);border:1px solid var(--accent-glow);border-radius:12px;margin-bottom:20px;animation:fadeUp .4s ease;}
+.vs-winner-label{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;}
+.vs-winner-sub{font-size:.65rem;color:var(--muted);margin-top:3px;}
+.vs-score{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;color:var(--accent);}
+@media(max-width:640px){
+  .vs-grid{grid-template-columns:1fr auto 1fr;}
+  .vs-ticker{font-size:1.4rem;}
+  .vs-row{grid-template-columns:1fr 90px 1fr;}
+  .vs-val{padding:9px 10px;font-size:.75rem;}
+  .vs-metric{font-size:.52rem;padding:9px 6px;}
+}
 @media(max-width:640px){
   .search-row{flex-direction:column;align-items:stretch;}
   .btn{width:100%;}
@@ -199,6 +226,7 @@ footer b{color:var(--accent);font-weight:500;}
   <div class="tabs">
     <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
     <button class="tab" onclick="switchTab('compare')">⚡ Quarter Compare</button>
+    <button class="tab" onclick="switchTab('versus')">⚔ Stock vs Stock</button>
   </div>
 
   <div class="panel active" id="panel-overview">
@@ -238,6 +266,22 @@ footer b{color:var(--accent);font-weight:500;}
       <button class="btn" onclick="loadCompare()">Compare →</button>
     </div>
     <div id="cmp-result"><div class="empty"><span class="empty-icon">⚡</span>Select two quarters to compare</div></div>
+  </div>
+
+  <div class="panel" id="panel-versus">
+    <div class="search-row">
+      <div class="field">
+        <span class="field-label">Stock A</span>
+        <input class="symbol-in" type="text" id="vs-sym1" placeholder="AAPL" maxlength="10" />
+      </div>
+      <div class="vs-sep">vs</div>
+      <div class="field">
+        <span class="field-label">Stock B</span>
+        <input class="symbol-in" type="text" id="vs-sym2" placeholder="MSFT" maxlength="10" />
+      </div>
+      <button class="btn" onclick="loadVersus()">Compare →</button>
+    </div>
+    <div id="vs-result"><div class="empty"><span class="empty-icon">⚔</span>Enter two stock symbols to compare</div></div>
   </div>
 </div>
 
@@ -389,7 +433,7 @@ updateKeyUI();
 const BASE = 'https://www.alphavantage.co/query';
 
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['overview','compare'][i]===t));
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['overview','compare','versus'][i]===t));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`panel-${t}`).classList.add('active');
 }
@@ -677,6 +721,104 @@ function exportCompare(){
     add('EBITDA',i1.ebitda,i2.ebitda);
   }
   exportCSV(rows, `${sym}_${q1}${y1}_vs_${q2}${y2}.csv`);
+}
+
+/* ── STOCK VS STOCK ── */
+async function loadVersus(){
+  const sym1 = document.getElementById('vs-sym1').value.trim().toUpperCase();
+  const sym2 = document.getElementById('vs-sym2').value.trim().toUpperCase();
+  if(!sym1 || !sym2) return;
+  if(!getKey()){ openSettings(); return; }
+  const el = document.getElementById('vs-result');
+
+  try{
+    el.innerHTML = loading(`Fetching ${sym1}…`);
+    const d1 = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym1}&apikey=${getKey()}`);
+    if(!d1.Symbol){ el.innerHTML = errBox(`No data found for ${sym1}.`); return; }
+
+    el.innerHTML = loading(`Fetching ${sym2}…`);
+    await delay(1200);
+    const d2 = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym2}&apikey=${getKey()}`);
+    if(!d2.Symbol){ el.innerHTML = errBox(`No data found for ${sym2}.`); return; }
+
+    // Metrics to compare: [label, key, lowerIsBetter]
+    const metrics = [
+      {label:'P/E Ratio',        key:'PERatio',              low:true,  note:'Lower = cheaper valuation'},
+      {label:'PEG Ratio',        key:'PEGRatio',             low:true,  note:'Lower = better growth value'},
+      {label:'EPS',              key:'EPS',                  low:false, note:'Higher = more earnings/share'},
+      {label:'Profit Margin',    key:'ProfitMargin',         low:false, note:'Higher = more efficient'},
+      {label:'Return on Equity', key:'ReturnOnEquityTTM',    low:false, note:'Higher = better returns'},
+      {label:'Oper. Margin',     key:'OperatingMarginTTM',   low:false, note:'Higher = better efficiency'},
+      {label:'Revenue TTM',      key:'RevenueTTM',           low:false, note:'Higher = more revenue'},
+      {label:'Market Cap',       key:'MarketCapitalization', low:false, note:'Higher = larger company'},
+      {label:'Dividend Yield',   key:'DividendYield',        low:false, note:'Higher = more income'},
+      {label:'Beta',             key:'Beta',                 low:true,  note:'Lower = less volatile'},
+    ];
+
+    let score1 = 0, score2 = 0;
+    const rows = metrics.map(m => {
+      const v1 = parseFloat(d1[m.key]), v2 = parseFloat(d2[m.key]);
+      if(isNaN(v1) || isNaN(v2)) return {m, v1, v2, w:0};
+      const w1 = m.low ? v1 < v2 : v1 > v2;
+      const w2 = m.low ? v2 < v1 : v2 > v1;
+      if(w1) score1++;
+      if(w2) score2++;
+      return {m, v1, v2, w1, w2};
+    });
+
+    const winner = score1 > score2 ? sym1 : score2 > score1 ? sym2 : null;
+    const fmtV = (key, v) => {
+      if(isNaN(v)) return '—';
+      if(['ProfitMargin','ReturnOnEquityTTM','OperatingMarginTTM','DividendYield'].includes(key)) return (v*100).toFixed(2)+'%';
+      if(['RevenueTTM','MarketCapitalization'].includes(key)) return fmt(v);
+      return v.toFixed(2);
+    };
+
+    const rowsHtml = rows.map(r => {
+      const val1 = fmtV(r.m.key, r.v1), val2 = fmtV(r.m.key, r.v2);
+      return `<div class="vs-row">
+        <div class="vs-val left ${r.w1?'winner':r.w2?'loser':''}">${val1}</div>
+        <div class="vs-metric" title="${r.m.note}">${r.m.label}</div>
+        <div class="vs-val right ${r.w2?'winner':r.w1?'loser':''}">${val2}</div>
+      </div>`;
+    }).join('');
+
+    const winnerHtml = winner
+      ? `<div class="vs-winner-banner">
+          <div>
+            <div class="vs-winner-label" style="color:var(--accent)">🏆 ${winner} wins</div>
+            <div class="vs-winner-sub">Better across ${Math.max(score1,score2)} out of ${rows.filter(r=>r.w1!==undefined).length} metrics</div>
+          </div>
+          <div class="vs-score">${score1} — ${score2}</div>
+        </div>`
+      : `<div class="vs-winner-banner"><div class="vs-winner-label">🤝 It's a tie!</div></div>`;
+
+    el.innerHTML = `
+      <div class="vs-grid" style="margin-bottom:16px">
+        <div class="vs-col">
+          <div class="vs-ticker">${sym1}</div>
+          <div class="vs-company">${d1.Name||''}</div>
+          <div class="company-sector">${d1.Sector||''}</div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="vs-col" style="text-align:right">
+          <div class="vs-ticker" style="text-align:right">${sym2}</div>
+          <div class="vs-company" style="text-align:right">${d2.Name||''}</div>
+          <div class="company-sector" style="text-align:right">${d2.Sector||''}</div>
+        </div>
+      </div>
+      ${winnerHtml}
+      <div class="sec-label">Head-to-Head Metrics</div>
+      <div class="vs-tbl-wrap">${rowsHtml}</div>
+      <div style="font-size:.6rem;color:var(--muted);text-align:center">🟢 Green = better value for that metric</div>`;
+
+  } catch(e){
+    el.innerHTML = e.message==='DAILY_LIMIT'
+      ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
+      : e.message==='RATE_LIMIT'
+      ? errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
+      : errBox('Network error.');
+  }
 }
 
 document.addEventListener('keydown', e => {
