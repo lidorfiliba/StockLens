@@ -175,15 +175,74 @@ canvas#priceChart{width:100%!important;height:100%!important;}
 .vs-winner-banner{display:flex;align-items:center;justify-content:center;gap:20px;padding:18px;background:var(--accent-dim);border:1px solid var(--accent-glow);border-radius:12px;margin-bottom:20px;animation:fadeUp .4s ease;}
 .vs-winner-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent);}
 .vs-score{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;color:var(--accent);}
-@media(max-width:640px){.vs-row{grid-template-columns:1fr 80px 1fr;}.vs-val{padding:8px 8px;font-size:.72rem;}.vs-metric-cell{font-size:.48rem;padding:8px 4px;}}
+
 @media(max-width:640px){
-  .search-row{flex-direction:column;align-items:stretch;}
-  .btn{width:100%;}
-  .symbol-in,.year-in,select{width:100%;}
-  .ticker{font-size:2.2rem;}
+  /* Layout */
+  .app{padding:0 14px 110px;}
+  header{padding:18px 0 16px;}
+  .logo{font-size:1.5rem;}
+
+  /* Tabs — scroll horizontally */
+  .tabs{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:2px;padding:3px;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{font-size:.6rem;padding:7px 12px;white-space:nowrap;}
+
+  /* Search row */
+  .search-row{flex-direction:column;align-items:stretch;gap:10px;padding:12px 14px;}
+  .field{width:100%;}
+  .symbol-in,.year-in,select,input[type="text"]{width:100%;font-size:1rem;padding:10px 12px;}
+  .btn{width:100%;padding:12px;font-size:.75rem;}
   .vs-sep{display:none;}
-  .health-wrap{flex-direction:column;}
+
+  /* Cards grid — 2 columns on mobile */
+  .metrics-grid{grid-template-columns:repeat(2,1fr);gap:7px;}
+  .card{padding:12px 13px;}
+  .card-value{font-size:1rem;}
+
+  /* Ticker */
+  .ticker{font-size:2rem;}
+  .ov-header{gap:8px;}
+
+  /* Health */
+  .health-wrap{flex-direction:column;gap:16px;padding:16px;}
+  .health-bars{min-width:unset;width:100%;}
+  .hbar-label{width:90px;font-size:.58rem;}
+
+  /* Settings */
   .settings-drawer{width:100vw;}
+
+  /* VS Stock */
+  .vs-row{grid-template-columns:1fr 70px 1fr;}
+  .vs-val{padding:8px 6px;font-size:.7rem;}
+  .vs-metric-cell{font-size:.44rem;padding:7px 3px;}
+  .vs-ticker-big{font-size:1.4rem;}
+  .vs-grid{gap:8px;}
+
+  /* Chart */
+  .chart-wrap{padding:14px 12px;}
+  .chart-stats{grid-template-columns:repeat(2,1fr);}
+  .chart-canvas-wrap{height:220px;}
+
+  /* Lock screen */
+  .lock-card{padding:28px 20px;}
+  .lock-logo{font-size:1.5rem;}
+
+  /* Compare table */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Footer */
+  footer{flex-wrap:wrap;gap:6px;padding:8px 14px;font-size:.55rem;}
+
+  /* No key banner */
+  .no-key-banner{flex-direction:column;align-items:flex-start;gap:8px;}
+}
+
+/* Extra small — iPhone SE / small Android */
+@media(max-width:380px){
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  .tab{font-size:.55rem;padding:6px 9px;}
+  .ticker{font-size:1.7rem;}
+  .card-value{font-size:.9rem;}
 }
 /* LOCK SCREEN */
 #lock-screen{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;}
@@ -232,23 +291,13 @@ canvas#priceChart{width:100%!important;height:100%!important;}
     </div>
     <div class="divider"></div>
     <div class="drawer-section">
-      <div class="drawer-label">Alpha Vantage API Key</div>
+      <div class="drawer-label">API Key</div>
       <div class="drawer-desc">Free key from <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co</a><br>25 requests/day · 5/min on free tier.</div>
       <div class="key-input-wrap">
-        <input type="password" id="apiKeyInput" placeholder="Paste your AV key…" autocomplete="off" spellcheck="false" />
+        <input type="password" id="apiKeyInput" placeholder="Paste your API key…" autocomplete="off" spellcheck="false" />
         <button class="save-btn" onclick="saveKey()">Save</button>
       </div>
       <div class="key-status" id="keyStatus"></div>
-    </div>
-    <div class="divider"></div>
-    <div class="drawer-section">
-      <div class="drawer-label">Financial Modeling Prep Key <span style="font-size:.55rem;color:var(--accent)">(Backup — 250 req/day)</span></div>
-      <div class="drawer-desc">Free key from <a href="https://site.financialmodelingprep.com/register" target="_blank">financialmodelingprep.com</a><br>250 requests/day · used when AV limit is reached.</div>
-      <div class="key-input-wrap">
-        <input type="password" id="fmpKeyInput" placeholder="Paste your FMP key…" autocomplete="off" spellcheck="false" />
-        <button class="save-btn" onclick="saveFmpKey()">Save</button>
-      </div>
-      <div class="key-status" id="fmpKeyStatus"></div>
     </div>
     <div class="divider"></div>
     <div class="drawer-section">
@@ -258,8 +307,7 @@ canvas#priceChart{width:100%!important;height:100%!important;}
     <div class="divider"></div>
     <div class="drawer-section">
       <div class="drawer-label">Danger Zone</div>
-      <button class="save-btn" style="background:var(--down);width:fit-content" onclick="clearKey()">Remove AV Key</button>
-      <button class="save-btn" style="background:var(--down);width:fit-content;margin-top:8px" onclick="clearFmpKey()">Remove FMP Key</button>
+      <button class="save-btn" style="background:var(--down);width:fit-content" onclick="clearKey()">Remove API Key</button>
     </div>
   </div>
 </div>
@@ -277,7 +325,7 @@ canvas#priceChart{width:100%!important;height:100%!important;}
   </header>
 
   <div class="no-key-banner" id="noKeyBanner">
-    ⚠ No API key set — add an Alpha Vantage or FMP key to get started.
+    ⚠ No API key set — data won't load.
     <button onclick="openSettings()">Add Key →</button>
   </div>
 
@@ -464,59 +512,21 @@ canvas#priceChart{width:100%!important;height:100%!important;}
 
 /* ── API KEY ── */
 const KEY_STORE = 'sl_apikey';
-const FMP_STORE = 'sl_fmpkey';
-const AV_LIMIT_KEY = 'sl_av_limit'; // stores date when AV hit daily limit
-
 function getKey(){ return localStorage.getItem(KEY_STORE) || ''; }
-function getFmpKey(){ return localStorage.getItem(FMP_STORE) || ''; }
-
-function isAvLimited(){
-  const d = localStorage.getItem(AV_LIMIT_KEY);
-  if(!d) return false;
-  // AV resets at midnight UTC
-  const limitDate = new Date(d);
-  const now = new Date();
-  const todayUTC = now.toISOString().split('T')[0];
-  const limitUTC = limitDate.toISOString().split('T')[0];
-  if(todayUTC > limitUTC){ localStorage.removeItem(AV_LIMIT_KEY); return false; }
-  return true;
-}
-
-function markAvLimited(){
-  localStorage.setItem(AV_LIMIT_KEY, new Date().toISOString());
-}
 
 function saveKey(){
   const val = document.getElementById('apiKeyInput').value.trim();
   if(!val){ showKeyStatus('err','Enter a key first.'); return; }
   localStorage.setItem(KEY_STORE, val);
-  localStorage.removeItem(AV_LIMIT_KEY); // reset limit flag on new key
   document.getElementById('apiKeyInput').value = '';
-  showKeyStatus('ok','✓ AV Key saved.');
+  showKeyStatus('ok','✓ Key saved.');
   updateKeyUI();
 }
 
 function clearKey(){
   localStorage.removeItem(KEY_STORE);
-  localStorage.removeItem(AV_LIMIT_KEY);
   document.getElementById('apiKeyInput').value = '';
-  showKeyStatus('err','AV Key removed.');
-  updateKeyUI();
-}
-
-function saveFmpKey(){
-  const val = document.getElementById('fmpKeyInput').value.trim();
-  if(!val){ showFmpKeyStatus('err','Enter a key first.'); return; }
-  localStorage.setItem(FMP_STORE, val);
-  document.getElementById('fmpKeyInput').value = '';
-  showFmpKeyStatus('ok','✓ FMP Key saved.');
-  updateKeyUI();
-}
-
-function clearFmpKey(){
-  localStorage.removeItem(FMP_STORE);
-  document.getElementById('fmpKeyInput').value = '';
-  showFmpKeyStatus('err','FMP Key removed.');
+  showKeyStatus('err','Key removed.');
   updateKeyUI();
 }
 
@@ -526,19 +536,10 @@ function showKeyStatus(type, msg){
   el.textContent = msg;
 }
 
-function showFmpKeyStatus(type, msg){
-  const el = document.getElementById('fmpKeyStatus');
-  el.className = 'key-status ' + type;
-  el.textContent = msg;
-}
-
 function updateKeyUI(){
-  const has = !!getKey() || !!getFmpKey();
+  const has = !!getKey();
   document.getElementById('keyDot').classList.toggle('set', has);
   document.getElementById('noKeyBanner').style.display = has ? 'none' : 'flex';
-  // Show AV limit warning if active
-  const limitWarn = document.getElementById('avLimitWarn');
-  if(limitWarn) limitWarn.style.display = isAvLimited() && getFmpKey() ? 'flex' : 'none';
 }
 
 function openSettings(){ document.getElementById('settingsOverlay').classList.add('open'); }
@@ -641,184 +642,8 @@ async function safeFetch(url){
   const r = await fetch(url);
   const d = await r.json();
   if(d['Note']) throw new Error('RATE_LIMIT');
-  if(d['Information']){ markAvLimited(); throw new Error('DAILY_LIMIT'); }
+  if(d['Information']) throw new Error('DAILY_LIMIT');
   return d;
-}
-
-/* ── FMP FETCH ── */
-const FMP_BASE = 'https://financialmodelingprep.com/stable';
-
-async function fmpFetch(endpoint, params={}){
-  const key = getFmpKey();
-  if(!key) throw new Error('NO_FMP_KEY');
-  const q = new URLSearchParams({...params, apikey: key});
-  const r = await fetch(`${FMP_BASE}/${endpoint}?${q}`);
-  const d = await r.json();
-  if(d && d['Error Message']) throw new Error('FMP_ERROR');
-  if(d && d.message && d.message.includes('limit')) throw new Error('FMP_LIMIT');
-  return d;
-}
-
-/* Convert FMP data to AV-compatible format */
-async function fmpGetOverview(sym){
-  const [profile, ratios, income, balance] = await Promise.all([
-    fmpFetch('profile', {symbol: sym}),
-    fmpFetch('ratios-ttm', {symbol: sym}),
-    fmpFetch('income-statement', {symbol: sym, limit: 1}),
-    fmpFetch('balance-sheet-statement', {symbol: sym, limit: 1}),
-  ]);
-  const p = Array.isArray(profile) ? profile[0] : profile;
-  const rt = Array.isArray(ratios) ? ratios[0] : ratios;
-  const inc = Array.isArray(income) ? income[0] : {};
-  const bal = Array.isArray(balance) ? balance[0] : {};
-
-  // Build AV-compatible dOv object
-  const dOv = {
-    Symbol: p.symbol,
-    Name: p.companyName,
-    Sector: p.sector,
-    Exchange: p.exchangeShortName,
-    MarketCapitalization: p.mktCap,
-    PERatio: rt.peRatioTTM,
-    PEGRatio: rt.pegRatioTTM,
-    EPS: p.eps,
-    EnterpriseValueToRevenue: rt.enterpriseValueMultipleTTM,
-    EnterpriseValueToEBITDA: rt.evToFreeCashFlowTTM,
-    RevenueTTM: inc.revenue,
-    ProfitMargin: rt.netProfitMarginTTM,
-    OperatingMarginTTM: rt.operatingProfitMarginTTM,
-    ReturnOnAssetsTTM: rt.returnOnAssetsTTM,
-    ReturnOnEquityTTM: rt.returnOnEquityTTM,
-    DividendYield: rt.dividendYieldTTM,
-    DividendPerShare: p.lastDiv,
-    PayoutRatio: rt.payoutRatioTTM,
-    Beta: p.beta,
-    _source: 'FMP'
-  };
-
-  // Build AV-compatible dInc
-  const dInc = {
-    annualReports: [{
-      fiscalDateEnding: inc.date,
-      totalRevenue: inc.revenue,
-      grossProfit: inc.grossProfit,
-      operatingIncome: inc.operatingIncome,
-      netIncome: inc.netIncome,
-      ebitda: inc.ebitda,
-      researchAndDevelopment: inc.researchAndDevelopmentExpenses,
-      interestExpense: inc.interestExpense,
-    }],
-    quarterlyReports: []
-  };
-
-  // Build AV-compatible dBal
-  const dBal = {
-    annualReports: [{
-      fiscalDateEnding: bal.date,
-      totalAssets: bal.totalAssets,
-      totalLiabilities: bal.totalLiabilities,
-      totalShareholderEquity: bal.totalStockholdersEquity,
-      cashAndCashEquivalentsAtCarryingValue: bal.cashAndCashEquivalents,
-      shortTermDebt: bal.shortTermDebt,
-      longTermDebt: bal.longTermDebt,
-      totalCurrentAssets: bal.totalCurrentAssets,
-      totalCurrentLiabilities: bal.totalCurrentLiabilities,
-    }],
-    quarterlyReports: []
-  };
-
-  return {dOv, dInc, dBal};
-}
-
-async function fmpGetQuarterlyIncome(sym){
-  const data = await fmpFetch('income-statement', {symbol: sym, period: 'quarter', limit: 12});
-  if(!Array.isArray(data) || !data.length) throw new Error('FMP_ERROR');
-  // Convert to AV format
-  return {
-    quarterlyReports: data.map(q => ({
-      fiscalDateEnding: q.date,
-      totalRevenue: q.revenue,
-      grossProfit: q.grossProfit,
-      operatingIncome: q.operatingIncome,
-      netIncome: q.netIncome,
-      ebitda: q.ebitda,
-      researchAndDevelopment: q.researchAndDevelopmentExpenses,
-      interestExpense: q.interestExpense,
-      eps: q.eps,
-      epsDiluted: q.epsdiluted,
-      reportedEPS: q.eps,
-      estimatedEPS: null,
-      surprise: null,
-      surprisePercentage: null,
-    }))
-  };
-}
-
-async function fmpGetPriceHistory(sym){
-  const data = await fmpFetch('historical-price-eod/full', {symbol: sym});
-  if(!data || !data.historical) throw new Error('FMP_ERROR');
-  // Convert to AV Time Series format
-  const ts = {};
-  data.historical.forEach(d => {
-    ts[d.date] = {
-      '1. open': d.open,
-      '2. high': d.high,
-      '3. low': d.low,
-      '4. close': d.close,
-      '5. adjusted close': d.adjClose || d.close,
-      '6. volume': d.volume,
-    };
-  });
-  return {'Time Series (Daily)': ts};
-}
-
-/* Smart fetch — uses AV first, falls back to FMP if daily limit hit */
-async function smartFetchOverview(sym){
-  const avKey = getKey();
-  const fmpKey = getFmpKey();
-  if(!avKey && !fmpKey) throw new Error('NO_KEY');
-
-  if(avKey && !isAvLimited()){
-    try{
-      const dOv = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym}&apikey=${avKey}`);
-      if(!dOv.Symbol) throw new Error('NO_DATA');
-      await delay(1200);
-      const dInc = await safeFetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${avKey}`);
-      await delay(1200);
-      const dBal = await safeFetch(`${BASE}?function=BALANCE_SHEET&symbol=${sym}&apikey=${avKey}`);
-      return {dOv, dInc, dBal, source:'AV'};
-    } catch(e){
-      if(e.message === 'DAILY_LIMIT' && fmpKey){
-        // fallthrough to FMP
-      } else {
-        throw e;
-      }
-    }
-  }
-
-  if(fmpKey){
-    const result = await fmpGetOverview(sym);
-    return {...result, source:'FMP'};
-  }
-  throw new Error('DAILY_LIMIT');
-}
-
-async function smartFetchChart(sym){
-  const avKey = getKey();
-  const fmpKey = getFmpKey();
-  if(!avKey && !fmpKey) throw new Error('NO_KEY');
-
-  if(avKey && !isAvLimited()){
-    try{
-      return await safeFetch(`${BASE}?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${sym}&outputsize=full&apikey=${avKey}`);
-    } catch(e){
-      if(e.message === 'DAILY_LIMIT' && fmpKey){ /* fallthrough */ }
-      else throw e;
-    }
-  }
-
-  if(fmpKey) return await fmpGetPriceHistory(sym);
-  throw new Error('DAILY_LIMIT');
 }
 
 function valChip(pe){
@@ -990,22 +815,26 @@ async function loadOverview(forceRefresh=false){
   }
   try{
     el.innerHTML = loading('Loading overview…');
-    const {dOv, dInc, dBal, source} = await smartFetchOverview(sym);
+    const dOv = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym}&apikey=${getKey()}`);
     if(!dOv.Symbol){ el.innerHTML = errBox('No data found. Check symbol or API key.'); return; }
+    el.innerHTML = loading('Loading income statement…');
+    await delay(1200);
+    const dInc = await safeFetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${getKey()}`);
+    el.innerHTML = loading('Loading balance sheet…');
+    await delay(1200);
+    const dBal = await safeFetch(`${BASE}?function=BALANCE_SHEET&symbol=${sym}&apikey=${getKey()}`);
     saveCache(sym, {dOv,dInc,dBal});
-    renderOverview(sym, false, {dOv,dInc,dBal}, source);
+    renderOverview(sym, false, {dOv,dInc,dBal});
   } catch(e){
     el.innerHTML = e.message==='DAILY_LIMIT'
-      ? errBox('AV daily limit reached (25 req/day). Add an FMP key in Settings for 250 more requests/day.')
+      ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
       : e.message==='RATE_LIMIT'
       ? errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
-      : e.message==='NO_KEY'
-      ? errBox('No API key set. Open Settings and add a key.')
       : errBox('Network error. Try deploying to GitHub Pages.');
   }
 }
 
-function renderOverview(sym, showCacheBanner=true, freshData=null, source=null){
+function renderOverview(sym, showCacheBanner=true, freshData=null){
   const el = document.getElementById('ov-result');
   const source = freshData || getCache(sym)?.data;
   if(!source) return;
@@ -1053,7 +882,7 @@ function renderOverview(sym, showCacheBanner=true, freshData=null, source=null){
   const cards=arr=>arr.map((m,i)=>`<div class="card" style="animation-delay:${i*0.04}s"><div class="card-label">${m.label}${tipHtml(m.label)}</div><div class="card-value ${m.cls||''}">${m.val||'—'}</div>${m.extra||''}</div>`).join('');
   const cacheBanner = showCacheBanner&&getCache(sym) ? `<div class="cache-banner"><span>💾 From cache · saved ${fmtAge(getCache(sym).ts)}</span><div class="cache-actions"><button class="cache-refresh-btn" onclick="loadOverview(true)">🔄 Refresh API</button></div></div>` : '';
   el.innerHTML = cacheBanner+`
-    <div class="ov-header"><div class="ticker">${dOv.Symbol}</div><div><div class="company-name-txt">${dOv.Name||''}</div><div class="company-sector">${dOv.Sector||''} · ${dOv.Exchange||''}</div></div>${(source||dOv._source)==='FMP'?'<div style="font-size:.55rem;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);border-radius:6px;padding:3px 9px;color:var(--accent)">via FMP</div>':''}</div>
+    <div class="ov-header"><div class="ticker">${dOv.Symbol}</div><div><div class="company-name-txt">${dOv.Name||''}</div><div class="company-sector">${dOv.Sector||''} · ${dOv.Exchange||''}</div></div></div>
     <div class="sec-label">Health Score ${tipHtml('Health Score')}</div>${renderHealth(dOv)}
     <div class="sec-label">Valuation & Fundamentals</div><div class="metrics-grid">${cards(fundamentals)}</div>
     <div class="sec-label">Income Statement <span style="font-size:.55rem;opacity:.5">${li.fiscalDateEnding||''}</span></div><div class="metrics-grid">${cards(incomeM)}</div>
@@ -1092,47 +921,18 @@ async function loadCompare(){
   const el = document.getElementById('cmp-result');
   const qm = {Q1:'03',Q2:'06',Q3:'09',Q4:'12'};
   try{
-    const avKey = getKey(), fmpKey = getFmpKey();
-    let qe, qi;
+    el.innerHTML = loading('Loading earnings…');
+    const dE = await safeFetch(`${BASE}?function=EARNINGS&symbol=${sym}&apikey=${getKey()}`);
+    if(!dE.quarterlyEarnings){ el.innerHTML = errBox('No earnings data. Check symbol/key.'); return; }
 
-    if(avKey && !isAvLimited()){
-      try{
-        el.innerHTML = loading('Loading earnings…');
-        const dE = await safeFetch(`${BASE}?function=EARNINGS&symbol=${sym}&apikey=${avKey}`);
-        if(!dE.quarterlyEarnings) throw new Error('NO_DATA');
-        el.innerHTML = loading('Loading income statement…');
-        await delay(1200);
-        const dI = await safeFetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${avKey}`);
-        qe = dE.quarterlyEarnings;
-        qi = dI?.quarterlyReports || [];
-      } catch(e){
-        if(e.message === 'DAILY_LIMIT' && fmpKey){ qe = null; }
-        else if(e.message === 'NO_DATA'){ el.innerHTML = errBox('No earnings data. Check symbol/key.'); return; }
-        else throw e;
-      }
-    }
+    el.innerHTML = loading('Loading income statement…');
+    await delay(1200);
+    const dI = await safeFetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${getKey()}`);
 
-    if(!qe && fmpKey){
-      el.innerHTML = loading('Loading via FMP…');
-      const fmpInc = await fmpGetQuarterlyIncome(sym);
-      qi = fmpInc.quarterlyReports;
-      // Build fake qe from FMP income data
-      qe = qi.map(q => ({
-        fiscalDateEnding: q.fiscalDateEnding,
-        reportedEPS: q.reportedEPS || q.eps || '—',
-        estimatedEPS: '—',
-        surprise: '—',
-        surprisePercentage: '—',
-      }));
-    }
-
-    if(!qe){ el.innerHTML = errBox('No earnings data. Check symbol/key.'); return; }
-    const qe_=qe, qi_=qi;
-    // reassign for rest of function
-    const qe2=qe_, qi2=qi_;
+    const qe=dE.quarterlyEarnings, qi=dI?.quarterlyReports||[];
     const findQ=(arr,yr,m)=>arr.find(e=>e.fiscalDateEnding?.startsWith(yr+'-'+m));
-    const e1=findQ(qe2,y1,qm[q1]), e2=findQ(qe2,y2,qm[q2]);
-    const i1=findQ(qi2,y1,qm[q1]), i2=findQ(qi2,y2,qm[q2]);
+    const e1=findQ(qe,y1,qm[q1]), e2=findQ(qe,y2,qm[q2]);
+    const i1=findQ(qi,y1,qm[q1]), i2=findQ(qi,y2,qm[q2]);
 
     if(!e1||!e2){
       el.innerHTML = errBox(`Quarter not found. Available: ${qe.slice(0,8).map(e=>e.fiscalDateEnding).join(', ')}`); return;
@@ -1210,12 +1010,11 @@ async function loadVersus(){
   const el=document.getElementById('vs-result');
   try{
     el.innerHTML=loading(`Fetching ${sym1}…`);
-    const res1=await smartFetchOverview(sym1);
-    const d1=res1.dOv;
+    const d1=await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym1}&apikey=${getKey()}`);
     if(!d1.Symbol){ el.innerHTML=errBox(`No data for ${sym1}.`); return; }
     el.innerHTML=loading(`Fetching ${sym2}…`);
-    const res2=await smartFetchOverview(sym2);
-    const d2=res2.dOv;
+    await delay(1200);
+    const d2=await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym2}&apikey=${getKey()}`);
     if(!d2.Symbol){ el.innerHTML=errBox(`No data for ${sym2}.`); return; }
 
     const metrics=[
@@ -1265,11 +1064,9 @@ async function loadVersus(){
       <div style="font-size:.6rem;color:var(--muted);text-align:center;margin-top:4px">🟢 Green = better value for that metric</div>`;
   }catch(e){
     el.innerHTML=e.message==='DAILY_LIMIT'
-      ?errBox('AV daily limit reached. Add an FMP key in Settings for 250 more requests/day.')
+      ?errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
       :e.message==='RATE_LIMIT'
-      ?errBox('Rate limit hit (5 req/min). Wait 1 minute and try again.')
-      :e.message==='NO_KEY'
-      ?errBox('No API key set. Open Settings and add a key.')
+      ?errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
       :errBox('Network error.');
   }
 }
@@ -1286,7 +1083,7 @@ async function loadChart(){
 
   try{
     el.innerHTML = loading('Loading price history…');
-    const data = await smartFetchChart(sym);
+    const data = await safeFetch(`${BASE}?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${sym}&outputsize=full&apikey=${getKey()}`);
     if(!data['Time Series (Daily)']){ el.innerHTML = errBox('No price data found. Check symbol.'); return; }
 
     const ts = data['Time Series (Daily)'];
