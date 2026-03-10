@@ -175,15 +175,74 @@ canvas#priceChart{width:100%!important;height:100%!important;}
 .vs-winner-banner{display:flex;align-items:center;justify-content:center;gap:20px;padding:18px;background:var(--accent-dim);border:1px solid var(--accent-glow);border-radius:12px;margin-bottom:20px;animation:fadeUp .4s ease;}
 .vs-winner-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent);}
 .vs-score{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;color:var(--accent);}
-@media(max-width:640px){.vs-row{grid-template-columns:1fr 80px 1fr;}.vs-val{padding:8px 8px;font-size:.72rem;}.vs-metric-cell{font-size:.48rem;padding:8px 4px;}}
+
 @media(max-width:640px){
-  .search-row{flex-direction:column;align-items:stretch;}
-  .btn{width:100%;}
-  .symbol-in,.year-in,select{width:100%;}
-  .ticker{font-size:2.2rem;}
+  /* Layout */
+  .app{padding:0 14px 110px;}
+  header{padding:18px 0 16px;}
+  .logo{font-size:1.5rem;}
+
+  /* Tabs — scroll horizontally */
+  .tabs{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:2px;padding:3px;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{font-size:.6rem;padding:7px 12px;white-space:nowrap;}
+
+  /* Search row */
+  .search-row{flex-direction:column;align-items:stretch;gap:10px;padding:12px 14px;}
+  .field{width:100%;}
+  .symbol-in,.year-in,select,input[type="text"]{width:100%;font-size:1rem;padding:10px 12px;}
+  .btn{width:100%;padding:12px;font-size:.75rem;}
   .vs-sep{display:none;}
-  .health-wrap{flex-direction:column;}
+
+  /* Cards grid — 2 columns on mobile */
+  .metrics-grid{grid-template-columns:repeat(2,1fr);gap:7px;}
+  .card{padding:12px 13px;}
+  .card-value{font-size:1rem;}
+
+  /* Ticker */
+  .ticker{font-size:2rem;}
+  .ov-header{gap:8px;}
+
+  /* Health */
+  .health-wrap{flex-direction:column;gap:16px;padding:16px;}
+  .health-bars{min-width:unset;width:100%;}
+  .hbar-label{width:90px;font-size:.58rem;}
+
+  /* Settings */
   .settings-drawer{width:100vw;}
+
+  /* VS Stock */
+  .vs-row{grid-template-columns:1fr 70px 1fr;}
+  .vs-val{padding:8px 6px;font-size:.7rem;}
+  .vs-metric-cell{font-size:.44rem;padding:7px 3px;}
+  .vs-ticker-big{font-size:1.4rem;}
+  .vs-grid{gap:8px;}
+
+  /* Chart */
+  .chart-wrap{padding:14px 12px;}
+  .chart-stats{grid-template-columns:repeat(2,1fr);}
+  .chart-canvas-wrap{height:220px;}
+
+  /* Lock screen */
+  .lock-card{padding:28px 20px;}
+  .lock-logo{font-size:1.5rem;}
+
+  /* Compare table */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Footer */
+  footer{flex-wrap:wrap;gap:6px;padding:8px 14px;font-size:.55rem;}
+
+  /* No key banner */
+  .no-key-banner{flex-direction:column;align-items:flex-start;gap:8px;}
+}
+
+/* Extra small — iPhone SE / small Android */
+@media(max-width:380px){
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  .tab{font-size:.55rem;padding:6px 9px;}
+  .ticker{font-size:1.7rem;}
+  .card-value{font-size:.9rem;}
 }
 /* LOCK SCREEN */
 #lock-screen{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;}
