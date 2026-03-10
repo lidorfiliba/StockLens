@@ -139,26 +139,6 @@ footer b{color:var(--accent);font-weight:500;}
 .tip{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--border2);color:var(--muted);font-size:.6rem;cursor:pointer;flex-shrink:0;transition:all .18s;line-height:1;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;-webkit-user-select:none;}
 .tip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
 #tip-global{display:none;position:fixed;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;font-size:.7rem;color:var(--text2);line-height:1.6;width:220px;max-width:calc(100vw - 32px);z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'JetBrains Mono',monospace;white-space:normal;}
-/* CHART */
-.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;backdrop-filter:blur(12px);animation:fadeUp .35s ease;}
-.chart-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-.chart-price{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--accent);}
-.chart-change{font-size:.8rem;padding:4px 10px;border-radius:100px;}
-.chart-change.up{background:rgba(0,229,160,0.1);color:var(--up);}
-.chart-change.down{background:rgba(255,95,87,0.1);color:var(--down);}
-.chart-canvas-wrap{position:relative;width:100%;height:280px;cursor:crosshair;}
-canvas#priceChart{width:100%!important;height:100%!important;}
-.chart-tooltip{position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:.68rem;pointer-events:none;display:none;z-index:10;white-space:nowrap;}
-.chart-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:16px;}
-.chart-stat{background:var(--surface2);border-radius:8px;padding:10px 14px;}
-.chart-stat-label{font-size:.55rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px;}
-.chart-stat-val{font-size:.9rem;font-weight:500;}
-.cache-banner{background:rgba(90,171,255,0.07);border:1px solid rgba(90,171,255,0.22);border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:.72rem;color:var(--blue);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;animation:fadeUp .3s ease;}
-.cache-actions{display:flex;gap:8px;flex-shrink:0;}
-.cache-use-btn{background:var(--blue);color:#000;border:none;border-radius:6px;padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:500;cursor:pointer;white-space:nowrap;}
-.cache-use-btn:hover{filter:brightness(1.1);}
-.cache-refresh-btn{background:transparent;color:var(--blue);border:1px solid rgba(90,171,255,0.35);border-radius:6px;padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:.65rem;cursor:pointer;white-space:nowrap;}
-.cache-refresh-btn:hover{background:rgba(90,171,255,0.1);}
 /* VS STOCK */
 .vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:16px;}
 .vs-ticker-big{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--accent);letter-spacing:-1px;}
@@ -285,7 +265,6 @@ canvas#priceChart{width:100%!important;height:100%!important;}
     <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
     <button class="tab" onclick="switchTab('compare')">⚡ Quarter Compare</button>
     <button class="tab" onclick="switchTab('versus')">⚔ Stock vs Stock</button>
-    <button class="tab" onclick="switchTab('chart')">📈 Price Chart</button>
   </div>
 
   <div class="panel active" id="panel-overview">
@@ -336,26 +315,6 @@ canvas#priceChart{width:100%!important;height:100%!important;}
     <div id="vs-result"><div class="empty"><span class="empty-icon">⚔</span>Enter two stock symbols to compare</div></div>
   </div>
 
-  <div class="panel" id="panel-chart">
-    <div class="search-row">
-      <div class="field">
-        <span class="field-label">Symbol</span>
-        <input class="symbol-in" type="text" id="chart-sym" placeholder="AAPL" maxlength="10"/>
-      </div>
-      <div class="field">
-        <span class="field-label">Period</span>
-        <select id="chart-period" style="width:90px">
-          <option value="3M">3 Months</option>
-          <option value="6M">6 Months</option>
-          <option value="1Y" selected>1 Year</option>
-          <option value="2Y">2 Years</option>
-          <option value="5Y">5 Years</option>
-        </select>
-      </div>
-      <button class="btn" onclick="loadChart()">Load Chart →</button>
-    </div>
-    <div id="chart-result"><div class="empty"><span class="empty-icon">📈</span>Enter a symbol to see price history</div></div>
-  </div>
 </div>
 
 <div id="tip-global"></div>
@@ -616,7 +575,7 @@ checkStoredAccess();
 const BASE = 'https://www.alphavantage.co/query';
 
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['overview','compare','versus','chart'][i]===t));
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['overview','compare','versus'][i]===t));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`panel-${t}`).classList.add('active');
 }
@@ -754,25 +713,6 @@ async function fmpGetQuarterlyIncome(sym){
   };
 }
 
-async function fmpGetPriceHistory(sym){
-  const data = await fmpFetch('historical-price-eod/full', {symbol: sym});
-  if(!data || !data.historical) throw new Error('FMP_ERROR');
-  // Convert to AV Time Series format
-  const ts = {};
-  data.historical.forEach(d => {
-    ts[d.date] = {
-      '1. open': d.open,
-      '2. high': d.high,
-      '3. low': d.low,
-      '4. close': d.close,
-      '5. adjusted close': d.adjClose || d.close,
-      '6. volume': d.volume,
-    };
-  });
-  return {'Time Series (Daily)': ts};
-}
-
-/* Smart fetch — uses AV first, falls back to FMP if daily limit hit */
 async function smartFetchOverview(sym){
   const avKey = getKey();
   const fmpKey = getFmpKey();
@@ -800,24 +740,6 @@ async function smartFetchOverview(sym){
     const result = await fmpGetOverview(sym);
     return {...result, source:'FMP'};
   }
-  throw new Error('DAILY_LIMIT');
-}
-
-async function smartFetchChart(sym){
-  const avKey = getKey();
-  const fmpKey = getFmpKey();
-  if(!avKey && !fmpKey) throw new Error('NO_KEY');
-
-  if(avKey && !isAvLimited()){
-    try{
-      return await safeFetch(`${BASE}?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${sym}&outputsize=full&apikey=${avKey}`);
-    } catch(e){
-      if(e.message === 'DAILY_LIMIT' && fmpKey){ /* fallthrough */ }
-      else throw e;
-    }
-  }
-
-  if(fmpKey) return await fmpGetPriceHistory(sym);
   throw new Error('DAILY_LIMIT');
 }
 
@@ -1271,160 +1193,6 @@ async function loadVersus(){
       :e.message==='NO_KEY'
       ?errBox('No API key set. Open Settings and add a key.')
       :errBox('Network error.');
-  }
-}
-
-/* ── PRICE CHART ── */
-let _chartInstance = null;
-
-async function loadChart(){
-  const sym = document.getElementById('chart-sym').value.trim().toUpperCase();
-  const period = document.getElementById('chart-period').value;
-  if(!sym) return;
-  if(!getKey() && !getFmpKey()){ openSettings(); return; }
-  const el = document.getElementById('chart-result');
-
-  try{
-    el.innerHTML = loading('Loading price history…');
-    const data = await smartFetchChart(sym);
-    if(!data['Time Series (Daily)']){ el.innerHTML = errBox('No price data found. Check symbol.'); return; }
-
-    const ts = data['Time Series (Daily)'];
-    const allDates = Object.keys(ts).sort();
-
-    // Filter by period
-    const now = new Date();
-    const cutoff = new Date(now);
-    if(period==='3M') cutoff.setMonth(cutoff.getMonth()-3);
-    else if(period==='6M') cutoff.setMonth(cutoff.getMonth()-6);
-    else if(period==='1Y') cutoff.setFullYear(cutoff.getFullYear()-1);
-    else if(period==='2Y') cutoff.setFullYear(cutoff.getFullYear()-2);
-    else if(period==='5Y') cutoff.setFullYear(cutoff.getFullYear()-5);
-    const cutoffStr = cutoff.toISOString().split('T')[0];
-    const dates = allDates.filter(d => d >= cutoffStr);
-
-    const closes  = dates.map(d => parseFloat(ts[d]['5. adjusted close']));
-    const opens   = dates.map(d => parseFloat(ts[d]['1. open']));
-    const highs   = dates.map(d => parseFloat(ts[d]['2. high']));
-    const lows    = dates.map(d => parseFloat(ts[d]['3. low']));
-    const volumes = dates.map(d => parseInt(ts[d]['6. volume']));
-
-    const first = closes[0], last = closes[closes.length-1];
-    const change = last - first, changePct = (change/first*100);
-    const isUp = change >= 0;
-    const hi = Math.max(...highs), lo = Math.min(...lows);
-    const avgVol = Math.round(volumes.reduce((a,b)=>a+b,0)/volumes.length);
-
-    // Label every ~10% of dates
-    const labelStep = Math.max(1, Math.floor(dates.length/8));
-    const labels = dates.map((d,i) => i%labelStep===0 ? d.slice(5) : '');
-
-    el.innerHTML = `
-      <div class="chart-wrap">
-        <div class="chart-header">
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--accent)">${sym}</div>
-            <div style="font-size:.65rem;color:var(--muted)">${data['Meta Data']?.['2. Symbol']||sym} · ${period} price history</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="chart-price">$${last.toFixed(2)}</div>
-            <div class="chart-change ${isUp?'up':'down'}">${isUp?'+':''}${changePct.toFixed(2)}%</div>
-          </div>
-        </div>
-        <div class="chart-canvas-wrap">
-          <canvas id="priceChart"></canvas>
-          <div class="chart-tooltip" id="chartTooltip"></div>
-        </div>
-        <div class="chart-stats">
-          <div class="chart-stat"><div class="chart-stat-label">Period High</div><div class="chart-stat-val" style="color:var(--up)">$${hi.toFixed(2)}</div></div>
-          <div class="chart-stat"><div class="chart-stat-label">Period Low</div><div class="chart-stat-val" style="color:var(--down)">$${lo.toFixed(2)}</div></div>
-          <div class="chart-stat"><div class="chart-stat-label">Start Price</div><div class="chart-stat-val">$${first.toFixed(2)}</div></div>
-          <div class="chart-stat"><div class="chart-stat-label">Total Change</div><div class="chart-stat-val" style="color:${isUp?'var(--up)':'var(--down)'}">${isUp?'+':''}$${change.toFixed(2)}</div></div>
-          <div class="chart-stat"><div class="chart-stat-label">Avg Volume</div><div class="chart-stat-val" style="color:var(--blue)">${fmt(avgVol)}</div></div>
-          <div class="chart-stat"><div class="chart-stat-label">Data Points</div><div class="chart-stat-val">${dates.length} days</div></div>
-        </div>
-      </div>`;
-
-    // Draw chart with Canvas API (no external lib needed)
-    const canvas = document.getElementById('priceChart');
-    const ctx = canvas.getContext('2d');
-    const wrap = canvas.parentElement;
-    canvas.width = wrap.offsetWidth * devicePixelRatio;
-    canvas.height = wrap.offsetHeight * devicePixelRatio;
-    ctx.scale(devicePixelRatio, devicePixelRatio);
-    const W = wrap.offsetWidth, H = wrap.offsetHeight;
-    const padL=48, padR=16, padT=16, padB=32;
-    const cW=W-padL-padR, cH=H-padT-padB;
-
-    const minP=lo*0.995, maxP=hi*1.005, rangeP=maxP-minP;
-    const xScale = i => padL + (i/(dates.length-1))*cW;
-    const yScale = v => padT + (1-(v-minP)/rangeP)*cH;
-
-    // Grid lines
-    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
-    for(let i=0;i<5;i++){
-      const y=padT+(i/4)*cH;
-      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+cW,y); ctx.stroke();
-      const val=(maxP-(i/4)*rangeP).toFixed(0);
-      ctx.fillStyle='rgba(240,240,248,0.35)'; ctx.font=`${10*devicePixelRatio/devicePixelRatio}px JetBrains Mono,monospace`;
-      ctx.textAlign='right'; ctx.fillText('$'+val, padL-6, y+4);
-    }
-
-    // Volume bars (subtle, bottom)
-    const maxVol=Math.max(...volumes);
-    const volH=cH*0.15;
-    volumes.forEach((v,i)=>{
-      const x=xScale(i), bW=Math.max(1,cW/dates.length*0.7);
-      const bH=(v/maxVol)*volH;
-      ctx.fillStyle=closes[i]>=opens[i]?'rgba(0,229,160,0.12)':'rgba(255,95,87,0.1)';
-      ctx.fillRect(x-bW/2, padT+cH-bH, bW, bH);
-    });
-
-    // Area fill under line
-    const grad=ctx.createLinearGradient(0,padT,0,padT+cH);
-    grad.addColorStop(0, isUp?'rgba(0,229,160,0.18)':'rgba(255,95,87,0.18)');
-    grad.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.beginPath();
-    ctx.moveTo(xScale(0), padT+cH);
-    closes.forEach((v,i)=>{ i===0?ctx.lineTo(xScale(0),yScale(v)):ctx.lineTo(xScale(i),yScale(v)); });
-    ctx.lineTo(xScale(closes.length-1), padT+cH);
-    ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
-
-    // Price line
-    ctx.beginPath(); ctx.strokeStyle=isUp?'#00e5a0':'#ff5f57'; ctx.lineWidth=2; ctx.lineJoin='round';
-    closes.forEach((v,i)=>{ i===0?ctx.moveTo(xScale(0),yScale(v)):ctx.lineTo(xScale(i),yScale(v)); });
-    ctx.stroke();
-
-    // X axis date labels
-    ctx.fillStyle='rgba(240,240,248,0.35)'; ctx.textAlign='center'; ctx.font=`10px JetBrains Mono,monospace`;
-    labels.forEach((l,i)=>{ if(l) ctx.fillText(l, xScale(i), H-padB+18); });
-
-    // Tooltip on hover
-    const tooltip = document.getElementById('chartTooltip');
-    wrap.addEventListener('mousemove', e=>{
-      const rect=wrap.getBoundingClientRect();
-      const mx=e.clientX-rect.left-padL;
-      if(mx<0||mx>cW){ tooltip.style.display='none'; return; }
-      const idx=Math.round((mx/cW)*(dates.length-1));
-      if(idx<0||idx>=dates.length){ tooltip.style.display='none'; return; }
-      const x=xScale(idx), y=yScale(closes[idx]);
-      // Crosshair
-      const ctx2=canvas.getContext('2d');
-      // Just reuse existing draw — show tooltip
-      tooltip.style.display='block';
-      tooltip.style.left=(x+10)+'px';
-      tooltip.style.top=Math.max(0,y-30)+'px';
-      const chg=idx>0?((closes[idx]-closes[idx-1])/closes[idx-1]*100):0;
-      tooltip.innerHTML=`<b>${dates[idx]}</b><br>Close: <b style="color:var(--accent)">$${closes[idx].toFixed(2)}</b><br>Change: <span style="color:${chg>=0?'var(--up)':'var(--down)'}">${chg>=0?'+':''}${chg.toFixed(2)}%</span><br>Vol: ${fmt(volumes[idx])}`;
-    });
-    wrap.addEventListener('mouseleave',()=>{ tooltip.style.display='none'; });
-
-  } catch(e){
-    el.innerHTML = e.message==='DAILY_LIMIT'
-      ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
-      : e.message==='RATE_LIMIT'
-      ? errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
-      : errBox('Network error.');
   }
 }
 
