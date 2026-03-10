@@ -974,7 +974,7 @@ let _ovData = null, _cmpData = null;
 async function loadOverview(forceRefresh=false){
   const sym = document.getElementById('ov-sym').value.trim().toUpperCase();
   if(!sym) return;
-  if(!getKey()){ openSettings(); return; }
+  if(!getKey() && !getFmpKey()){ openSettings(); return; }
   const el = document.getElementById('ov-result');
   if(!forceRefresh){
     const cached = getCache(sym);
@@ -1088,7 +1088,7 @@ async function loadCompare(){
   const q1=document.getElementById('cq1').value, y1=document.getElementById('cy1').value;
   const q2=document.getElementById('cq2').value, y2=document.getElementById('cy2').value;
   if(!sym) return;
-  if(!getKey()){ openSettings(); return; }
+  if(!getKey() && !getFmpKey()){ openSettings(); return; }
   const el = document.getElementById('cmp-result');
   const qm = {Q1:'03',Q2:'06',Q3:'09',Q4:'12'};
   try{
@@ -1206,7 +1206,7 @@ async function loadVersus(){
   const sym1=document.getElementById('vs-sym1').value.trim().toUpperCase();
   const sym2=document.getElementById('vs-sym2').value.trim().toUpperCase();
   if(!sym1||!sym2) return;
-  if(!getKey()){ openSettings(); return; }
+  if(!getKey() && !getFmpKey()){ openSettings(); return; }
   const el=document.getElementById('vs-result');
   try{
     el.innerHTML=loading(`Fetching ${sym1}…`);
@@ -1281,7 +1281,7 @@ async function loadChart(){
   const sym = document.getElementById('chart-sym').value.trim().toUpperCase();
   const period = document.getElementById('chart-period').value;
   if(!sym) return;
-  if(!getKey()){ openSettings(); return; }
+  if(!getKey() && !getFmpKey()){ openSettings(); return; }
   const el = document.getElementById('chart-result');
 
   try{
