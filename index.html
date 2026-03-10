@@ -136,11 +136,9 @@ footer b{color:var(--accent);font-weight:500;}
 .donate-btn:hover{background:rgba(0,112,186,0.12);border-color:#0070BA;color:#fff;}
 /* TOOLTIPS */
 .card-label{font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:5px;}
-.tip{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1px solid var(--border2);color:var(--muted);font-size:.55rem;cursor:pointer;flex-shrink:0;transition:all .18s;position:relative;line-height:1;}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--border2);color:var(--muted);font-size:.6rem;cursor:pointer;flex-shrink:0;transition:all .18s;line-height:1;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;-webkit-user-select:none;}
 .tip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
-.tip-box{display:none;position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:.65rem;color:var(--text2);line-height:1.6;width:210px;z-index:999;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.5);font-family:'JetBrains Mono',monospace;text-transform:none;letter-spacing:0;white-space:normal;}
-.tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--border2);}
-.tip.active .tip-box{display:block;}
+#tip-global{display:none;position:fixed;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;font-size:.7rem;color:var(--text2);line-height:1.6;width:220px;max-width:calc(100vw - 32px);z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'JetBrains Mono',monospace;white-space:normal;}
 /* CHART */
 .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;backdrop-filter:blur(12px);animation:fadeUp .35s ease;}
 .chart-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
@@ -316,6 +314,8 @@ canvas#priceChart{width:100%!important;height:100%!important;}
     <div id="chart-result"><div class="empty"><span class="empty-icon">📈</span>Enter a symbol to see price history</div></div>
   </div>
 </div>
+
+<div id="tip-global"></div>
 
 <footer>StockLens · <b>Lidor.F</b> · <a class="donate-btn" href="https://paypal.me/ShareSomeLoveRL" target="_blank">💙 Support this project</a></footer>
 
@@ -589,16 +589,50 @@ const TIPS={
   'Beta':'תנודתיות ביחס לשוק. מעל 1 = תנודתי יותר מהשוק.',
   'Health Score':'ציון כולל המבוסס על P/E, מרווחים, ROE ו-EPS.',
 };
-function tipHtml(label){const t=TIPS[label];if(!t)return'';return`<span class="tip" onclick="toggleTip(event)">?<span class="tip-box">${t}</span></span>`;}
+function tipHtml(label){const t=TIPS[label];if(!t)return'';return`<span class="tip" data-tip="${t.replace(/"/g,'&quot;')}">?</span>`;}
 
-function toggleTip(e){
-  e.stopPropagation();
-  const tip = e.currentTarget;
-  const wasActive = tip.classList.contains('active');
-  document.querySelectorAll('.tip.active').forEach(t=>t.classList.remove('active'));
-  if(!wasActive) tip.classList.add('active');
-}
-document.addEventListener('click', ()=>{ document.querySelectorAll('.tip.active').forEach(t=>t.classList.remove('active')); });
+/* ── TOOLTIP LOGIC (mobile-safe) ── */
+(function(){
+  const box = document.getElementById('tip-global');
+  let activeTip = null;
+
+  function showTip(tip){
+    box.textContent = tip.dataset.tip;
+    box.style.display = 'block';
+    requestAnimationFrame(()=>{
+      const rect = tip.getBoundingClientRect();
+      const bW = Math.min(220, window.innerWidth - 32);
+      const bH = box.offsetHeight;
+      let left = rect.left + rect.width/2 - bW/2;
+      left = Math.max(16, Math.min(left, window.innerWidth - bW - 16));
+      let top = rect.top - bH - 8;
+      if(top < 16) top = rect.bottom + 8;
+      box.style.width = bW + 'px';
+      box.style.left = left + 'px';
+      box.style.top = top + 'px';
+    });
+    tip.classList.add('active');
+    activeTip = tip;
+  }
+
+  function hideTip(){
+    box.style.display = 'none';
+    if(activeTip){ activeTip.classList.remove('active'); activeTip = null; }
+  }
+
+  function handleInteraction(e){
+    const tip = e.target.closest('[data-tip]');
+    if(tip){
+      e.preventDefault(); e.stopPropagation();
+      if(activeTip === tip){ hideTip(); } else { hideTip(); showTip(tip); }
+      return;
+    }
+    hideTip();
+  }
+
+  document.addEventListener('touchend', handleInteraction, {passive:false});
+  document.addEventListener('click', handleInteraction);
+})();
 
 /* ── CSV EXPORT ── */
 function exportCSV(rows, filename){
