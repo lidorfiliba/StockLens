@@ -132,35 +132,52 @@ tbody tr:hover td{background:var(--surface2);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:translateY(0);}}
 footer{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:10px 28px;background:linear-gradient(0deg,var(--bg) 55%,transparent);font-size:.6rem;color:var(--muted);letter-spacing:1.5px;gap:10px;}
 footer b{color:var(--accent);font-weight:500;}
-.donate-btn{background:transparent;border:1px solid rgba(0,112,186,0.4);color:#5aabff;border-radius:100px;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:1px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;text-decoration:none;}
+.donate-btn{background:transparent;border:1px solid rgba(0,112,186,0.4);color:#5aabff;border-radius:100px;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:1px;transition:all .2s;display:inline-flex;align-items:center;gap:5px;text-decoration:none;}
 .donate-btn:hover{background:rgba(0,112,186,0.12);border-color:#0070BA;color:#fff;}
-
-/* ── VS STYLES ── */
-.vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:20px;}
-.vs-col{display:flex;flex-direction:column;gap:8px;}
-.vs-ticker{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--accent);letter-spacing:-1px;line-height:1;}
-.vs-company{font-size:.75rem;color:var(--text2);margin-top:2px;}
-.vs-divider{display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--muted);padding-top:8px;}
-.vs-row{display:grid;grid-template-columns:1fr 120px 1fr;gap:0;border-bottom:1px solid var(--border);align-items:center;}
+/* TOOLTIPS */
+.card-label{font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:5px;}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1px solid var(--border2);color:var(--muted);font-size:.55rem;cursor:pointer;flex-shrink:0;transition:all .18s;position:relative;line-height:1;}
+.tip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.tip-box{display:none;position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:.65rem;color:var(--text2);line-height:1.6;width:210px;z-index:999;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.5);font-family:'JetBrains Mono',monospace;text-transform:none;letter-spacing:0;white-space:normal;}
+.tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--border2);}
+.tip:hover .tip-box{display:block;}
+/* CHART */
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;backdrop-filter:blur(12px);animation:fadeUp .35s ease;}
+.chart-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.chart-price{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--accent);}
+.chart-change{font-size:.8rem;padding:4px 10px;border-radius:100px;}
+.chart-change.up{background:rgba(0,229,160,0.1);color:var(--up);}
+.chart-change.down{background:rgba(255,95,87,0.1);color:var(--down);}
+.chart-canvas-wrap{position:relative;width:100%;height:280px;cursor:crosshair;}
+canvas#priceChart{width:100%!important;height:100%!important;}
+.chart-tooltip{position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:.68rem;pointer-events:none;display:none;z-index:10;white-space:nowrap;}
+.chart-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:16px;}
+.chart-stat{background:var(--surface2);border-radius:8px;padding:10px 14px;}
+.chart-stat-label{font-size:.55rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px;}
+.chart-stat-val{font-size:.9rem;font-weight:500;}
+.cache-banner{background:rgba(90,171,255,0.07);border:1px solid rgba(90,171,255,0.22);border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:.72rem;color:var(--blue);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;animation:fadeUp .3s ease;}
+.cache-actions{display:flex;gap:8px;flex-shrink:0;}
+.cache-use-btn{background:var(--blue);color:#000;border:none;border-radius:6px;padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:500;cursor:pointer;white-space:nowrap;}
+.cache-use-btn:hover{filter:brightness(1.1);}
+.cache-refresh-btn{background:transparent;color:var(--blue);border:1px solid rgba(90,171,255,0.35);border-radius:6px;padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:.65rem;cursor:pointer;white-space:nowrap;}
+.cache-refresh-btn:hover{background:rgba(90,171,255,0.1);}
+/* VS STOCK */
+.vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:16px;}
+.vs-ticker-big{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--accent);letter-spacing:-1px;}
+.vs-divider-big{display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--muted);padding-top:6px;}
+.vs-row{display:grid;grid-template-columns:1fr 130px 1fr;border-bottom:1px solid var(--border);align-items:center;}
 .vs-row:last-child{border-bottom:none;}
-.vs-val{padding:11px 16px;font-size:.82rem;font-family:'JetBrains Mono',monospace;}
+.vs-val{padding:11px 16px;font-size:.82rem;}
 .vs-val.left{text-align:right;border-right:1px solid var(--border);}
 .vs-val.right{text-align:left;border-left:1px solid var(--border);}
 .vs-val.winner{color:var(--up);font-weight:600;}
 .vs-val.loser{color:var(--muted);}
-.vs-metric{padding:11px 12px;font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);text-align:center;background:var(--surface);}
+.vs-metric-cell{padding:10px 12px;font-size:.56rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);text-align:center;background:var(--surface);display:flex;align-items:center;justify-content:center;gap:4px;}
 .vs-tbl-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;backdrop-filter:blur(12px);margin-bottom:16px;}
-.vs-winner-banner{display:flex;align-items:center;justify-content:center;gap:16px;padding:20px;background:var(--accent-dim);border:1px solid var(--accent-glow);border-radius:12px;margin-bottom:20px;animation:fadeUp .4s ease;}
-.vs-winner-label{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;}
-.vs-winner-sub{font-size:.65rem;color:var(--muted);margin-top:3px;}
-.vs-score{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;color:var(--accent);}
-@media(max-width:640px){
-  .vs-grid{grid-template-columns:1fr auto 1fr;}
-  .vs-ticker{font-size:1.4rem;}
-  .vs-row{grid-template-columns:1fr 90px 1fr;}
-  .vs-val{padding:9px 10px;font-size:.75rem;}
-  .vs-metric{font-size:.52rem;padding:9px 6px;}
-}
+.vs-winner-banner{display:flex;align-items:center;justify-content:center;gap:20px;padding:18px;background:var(--accent-dim);border:1px solid var(--accent-glow);border-radius:12px;margin-bottom:20px;animation:fadeUp .4s ease;}
+.vs-winner-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent);}
+.vs-score{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;color:var(--accent);}
+@media(max-width:640px){.vs-row{grid-template-columns:1fr 80px 1fr;}.vs-val{padding:8px 8px;font-size:.72rem;}.vs-metric-cell{font-size:.48rem;padding:8px 4px;}}
 @media(max-width:640px){
   .search-row{flex-direction:column;align-items:stretch;}
   .btn{width:100%;}
@@ -227,6 +244,7 @@ footer b{color:var(--accent);font-weight:500;}
     <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
     <button class="tab" onclick="switchTab('compare')">⚡ Quarter Compare</button>
     <button class="tab" onclick="switchTab('versus')">⚔ Stock vs Stock</button>
+    <button class="tab" onclick="switchTab('chart')">📈 Price Chart</button>
   </div>
 
   <div class="panel active" id="panel-overview">
@@ -267,21 +285,35 @@ footer b{color:var(--accent);font-weight:500;}
     </div>
     <div id="cmp-result"><div class="empty"><span class="empty-icon">⚡</span>Select two quarters to compare</div></div>
   </div>
-
   <div class="panel" id="panel-versus">
     <div class="search-row">
-      <div class="field">
-        <span class="field-label">Stock A</span>
-        <input class="symbol-in" type="text" id="vs-sym1" placeholder="AAPL" maxlength="10" />
-      </div>
+      <div class="field"><span class="field-label">Stock A</span><input class="symbol-in" type="text" id="vs-sym1" placeholder="AAPL" maxlength="10"/></div>
       <div class="vs-sep">vs</div>
-      <div class="field">
-        <span class="field-label">Stock B</span>
-        <input class="symbol-in" type="text" id="vs-sym2" placeholder="MSFT" maxlength="10" />
-      </div>
+      <div class="field"><span class="field-label">Stock B</span><input class="symbol-in" type="text" id="vs-sym2" placeholder="MSFT" maxlength="10"/></div>
       <button class="btn" onclick="loadVersus()">Compare →</button>
     </div>
     <div id="vs-result"><div class="empty"><span class="empty-icon">⚔</span>Enter two stock symbols to compare</div></div>
+  </div>
+
+  <div class="panel" id="panel-chart">
+    <div class="search-row">
+      <div class="field">
+        <span class="field-label">Symbol</span>
+        <input class="symbol-in" type="text" id="chart-sym" placeholder="AAPL" maxlength="10"/>
+      </div>
+      <div class="field">
+        <span class="field-label">Period</span>
+        <select id="chart-period" style="width:90px">
+          <option value="3M">3 Months</option>
+          <option value="6M">6 Months</option>
+          <option value="1Y" selected>1 Year</option>
+          <option value="2Y">2 Years</option>
+          <option value="5Y">5 Years</option>
+        </select>
+      </div>
+      <button class="btn" onclick="loadChart()">Load Chart →</button>
+    </div>
+    <div id="chart-result"><div class="empty"><span class="empty-icon">📈</span>Enter a symbol to see price history</div></div>
   </div>
 </div>
 
@@ -433,7 +465,7 @@ updateKeyUI();
 const BASE = 'https://www.alphavantage.co/query';
 
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['overview','compare','versus'][i]===t));
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['overview','compare','versus','chart'][i]===t));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`panel-${t}`).classList.add('active');
 }
@@ -517,6 +549,48 @@ function renderHealth(d){
   </div>`;
 }
 
+/* ── CACHE SYSTEM ── */
+const CACHE_STORE='sl_cache_ov';
+function saveCache(sym,data){try{const c=JSON.parse(localStorage.getItem(CACHE_STORE)||'{}');c[sym]={data,ts:Date.now()};const k=Object.keys(c);if(k.length>10)delete c[k[0]];localStorage.setItem(CACHE_STORE,JSON.stringify(c));}catch(e){}}
+function getCache(sym){try{const c=JSON.parse(localStorage.getItem(CACHE_STORE)||'{}');return c[sym]||null;}catch(e){return null;}}
+function fmtAge(ts){const m=Math.floor((Date.now()-ts)/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
+
+/* ── TOOLTIPS ── */
+const TIPS={
+  'P/E Ratio':'Price-to-Earnings: כמה משלמים על כל $1 רווח. נמוך = זול יותר. מעל 25 = יקר.',
+  'PEG Ratio':'P/E ביחס לצמיחה. מתחת ל-1 = מניה זולה ביחס לצמיחה שלה.',
+  'EPS':'Earnings Per Share: רווח נקי לכל מניה. גבוה יותר = טוב יותר.',
+  'EV / Revenue':'Enterprise Value חלקי הכנסות. מודד כמה שווה החברה ביחס להכנסות.',
+  'EV / EBITDA':'מכפיל שווי לרווח תפעולי. מתחת ל-10 נחשב זול.',
+  'Market Cap':'שווי שוק כולל של החברה. Large Cap מעל $10B.',
+  'Revenue TTM':'סך ההכנסות ב-12 החודשים האחרונים.',
+  'Profit Margin':'אחוז הרווח מתוך ההכנסות. מעל 20% נחשב גבוה.',
+  'Oper. Margin':'רווח תפעולי מתוך הכנסות לפני מסים וריבית.',
+  'Return on Assets':'כמה רווח מייצרים מהנכסים. מעל 5% טוב.',
+  'Return on Equity':'תשואה על ההון העצמי. מעל 15% נחשב חזק.',
+  'Total Revenue':'סך ההכנסות בשנה הפיסקלית האחרונה.',
+  'Gross Profit':'הכנסות פחות עלות המכר. לפני הוצאות תפעול.',
+  'Operating Income':'רווח אחרי הוצאות תפעול, לפני מסים וריבית.',
+  'Net Income':'הרווח הנקי הסופי אחרי כל ההוצאות והמסים.',
+  'EBITDA':'רווח לפני ריבית, מסים, פחת והפחתות.',
+  'R&D Expense':'השקעה במחקר ופיתוח. גבוה = חברה שמשקיעה בעתיד.',
+  'Interest Expense':'עלות שירות החוב. גבוה = חברה ממונפת.',
+  'Total Assets':'סך כל הנכסים של החברה.',
+  'Total Liabilities':'סך כל ההתחייבויות. רצוי שיהיה נמוך מהנכסים.',
+  'Shareholder Equity':'שווי נכסים פחות התחייבויות. ההון שנשאר לבעלי המניות.',
+  'Cash':'מזומן ושווי מזומן. כרית ביטחון לחברה.',
+  'Short-term Debt':'חוב לפירעון בתוך שנה.',
+  'Long-term Debt':'חוב לפירעון מעל שנה. גבוה מדי = סיכון.',
+  'Current Ratio':'נכסים שוטפים / התחייבויות שוטפות. מעל 1.5 = בריא.',
+  'Div. Yield (Annual)':'תשואת דיבידנד שנתית. אחוז מחיר המניה שמשולם כדיבידנד.',
+  'Div. Yield (Monthly)':'תשואת דיבידנד חודשית (שנתית חלקי 12).',
+  'Dividend / Share':'סכום הדיבידנד המשולם לכל מניה בשנה.',
+  'Payout Ratio':'אחוז הרווח שמחולק כדיבידנד. מעל 80% = לא בר-קיימא.',
+  'Beta':'תנודתיות ביחס לשוק. מעל 1 = תנודתי יותר מהשוק.',
+  'Health Score':'ציון כולל המבוסס על P/E, מרווחים, ROE ו-EPS.',
+};
+function tipHtml(label){const t=TIPS[label];if(!t)return'';return`<span class="tip">?<span class="tip-box">${t}</span></span>`;}
+
 /* ── CSV EXPORT ── */
 function exportCSV(rows, filename){
   const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
@@ -527,84 +601,35 @@ function exportCSV(rows, filename){
 let _ovData = null, _cmpData = null;
 
 /* ── OVERVIEW ── */
-async function loadOverview(){
+async function loadOverview(forceRefresh=false){
   const sym = document.getElementById('ov-sym').value.trim().toUpperCase();
   if(!sym) return;
   if(!getKey()){ openSettings(); return; }
   const el = document.getElementById('ov-result');
+  if(!forceRefresh){
+    const cached = getCache(sym);
+    if(cached){
+      el.innerHTML = `<div class="cache-banner">
+        <span>💾 Cached data for <b>${sym}</b> · saved ${fmtAge(cached.ts)}</span>
+        <div class="cache-actions">
+          <button class="cache-use-btn" onclick="renderOverview('${sym}')">Use Cached</button>
+          <button class="cache-refresh-btn" onclick="loadOverview(true)">🔄 Refresh API</button>
+        </div></div>`;
+      return;
+    }
+  }
   try{
     el.innerHTML = loading('Loading overview…');
     const dOv = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym}&apikey=${getKey()}`);
     if(!dOv.Symbol){ el.innerHTML = errBox('No data found. Check symbol or API key.'); return; }
-
     el.innerHTML = loading('Loading income statement…');
     await delay(1200);
     const dInc = await safeFetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${getKey()}`);
-
     el.innerHTML = loading('Loading balance sheet…');
     await delay(1200);
     const dBal = await safeFetch(`${BASE}?function=BALANCE_SHEET&symbol=${sym}&apikey=${getKey()}`);
-
-    _ovData = { dOv, dInc, dBal, sym };
-    const li = dInc?.annualReports?.[0]||{}, lb = dBal?.annualReports?.[0]||{};
-
-    const fundamentals=[
-      {label:'P/E Ratio',       val:dOv.PERatio,                      extra:valChip(dOv.PERatio)},
-      {label:'PEG Ratio',       val:dOv.PEGRatio},
-      {label:'EPS',             val:dOv.EPS},
-      {label:'EV / Revenue',    val:dOv.EnterpriseValueToRevenue},
-      {label:'EV / EBITDA',     val:dOv.EnterpriseValueToEBITDA},
-      {label:'Market Cap',      val:fmt(dOv.MarketCapitalization),     cls:'blue'},
-      {label:'Revenue TTM',     val:fmt(dOv.RevenueTTM),               cls:'blue'},
-      {label:'Profit Margin',   val:pct(dOv.ProfitMargin),             cls:parseFloat(dOv.ProfitMargin)>0.15?'green':'red'},
-      {label:'Oper. Margin',    val:pct(dOv.OperatingMarginTTM),      cls:parseFloat(dOv.OperatingMarginTTM)>0?'green':'red'},
-      {label:'Return on Assets',val:pct(dOv.ReturnOnAssetsTTM),       cls:'green'},
-      {label:'Return on Equity',val:pct(dOv.ReturnOnEquityTTM),       cls:'green'},
-    ];
-    const incomeM=[
-      {label:'Total Revenue',   val:fmt(li.totalRevenue),              cls:'blue'},
-      {label:'Gross Profit',    val:fmt(li.grossProfit),               cls:'green'},
-      {label:'Operating Income',val:fmt(li.operatingIncome),           cls:parseFloat(li.operatingIncome)>0?'green':'red'},
-      {label:'Net Income',      val:fmt(li.netIncome),                 cls:parseFloat(li.netIncome)>0?'green':'red'},
-      {label:'EBITDA',          val:fmt(li.ebitda),                    cls:'blue'},
-      {label:'R&D Expense',     val:fmt(li.researchAndDevelopment)},
-      {label:'Interest Expense',val:fmt(li.interestExpense)},
-    ];
-    const balM=[
-      {label:'Total Assets',     val:fmt(lb.totalAssets),              cls:'blue'},
-      {label:'Total Liabilities',val:fmt(lb.totalLiabilities),         cls:'red'},
-      {label:'Shareholder Equity',val:fmt(lb.totalShareholderEquity),  cls:'green'},
-      {label:'Cash',             val:fmt(lb.cashAndCashEquivalentsAtCarryingValue), cls:'green'},
-      {label:'Short-term Debt',  val:fmt(lb.shortTermDebt)},
-      {label:'Long-term Debt',   val:fmt(lb.longTermDebt),             cls:'red'},
-      {label:'Current Ratio',    val:(()=>{ const a=parseFloat(lb.totalCurrentAssets),b=parseFloat(lb.totalCurrentLiabilities); return(a&&b)?(a/b).toFixed(2):'—'; })(),
-       cls:(()=>{ const a=parseFloat(lb.totalCurrentAssets),b=parseFloat(lb.totalCurrentLiabilities),r=a&&b?a/b:0; return r>=2?'green':r>=1?'gold':'red'; })()},
-    ];
-    const divs=[
-      {label:'Div. Yield (Annual)', val:pct(dOv.DividendYield),        cls:'gold'},
-      {label:'Div. Yield (Monthly)',val:(()=>{ const n=parseFloat(dOv.DividendYield); return isNaN(n)?'—':(n/12*100).toFixed(3)+'%'; })(), cls:'gold'},
-      {label:'Dividend / Share',    val:dOv.DividendPerShare},
-      {label:'Payout Ratio',        val:pct(dOv.PayoutRatio)},
-    ];
-
-    const cards = arr => arr.map((m,i)=>`
-      <div class="card" style="animation-delay:${i*0.04}s">
-        <div class="card-label">${m.label}</div>
-        <div class="card-value ${m.cls||''}">${m.val||'—'}</div>
-        ${m.extra||''}
-      </div>`).join('');
-
-    el.innerHTML = `
-      <div class="ov-header">
-        <div class="ticker">${dOv.Symbol}</div>
-        <div><div class="company-name-txt">${dOv.Name||''}</div><div class="company-sector">${dOv.Sector||''} · ${dOv.Exchange||''}</div></div>
-      </div>
-      <div class="sec-label">Health Score</div>${renderHealth(dOv)}
-      <div class="sec-label">Valuation & Fundamentals</div><div class="metrics-grid">${cards(fundamentals)}</div>
-      <div class="sec-label">Income Statement <span style="font-size:.55rem;opacity:.5">${li.fiscalDateEnding||''}</span></div><div class="metrics-grid">${cards(incomeM)}</div>
-      <div class="sec-label">Balance Sheet</div><div class="metrics-grid">${cards(balM)}</div>
-      <div class="sec-label">Dividends</div><div class="metrics-grid">${cards(divs)}</div>
-      <div class="export-bar"><button class="btn btn-outline" onclick="exportOverview()">⬇ Export CSV</button></div>`;
+    saveCache(sym, {dOv,dInc,dBal});
+    renderOverview(sym, false, {dOv,dInc,dBal});
   } catch(e){
     el.innerHTML = e.message==='DAILY_LIMIT'
       ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
@@ -613,6 +638,64 @@ async function loadOverview(){
       : errBox('Network error. Try deploying to GitHub Pages.');
   }
 }
+
+function renderOverview(sym, showCacheBanner=true, freshData=null){
+  const el = document.getElementById('ov-result');
+  const source = freshData || getCache(sym)?.data;
+  if(!source) return;
+  const {dOv, dInc, dBal} = source;
+  _ovData = {dOv, dInc, dBal, sym};
+  const li=dInc?.annualReports?.[0]||{}, lb=dBal?.annualReports?.[0]||{};
+  const fundamentals=[
+    {label:'P/E Ratio',val:dOv.PERatio,extra:valChip(dOv.PERatio)},
+    {label:'PEG Ratio',val:dOv.PEGRatio},
+    {label:'EPS',val:dOv.EPS},
+    {label:'EV / Revenue',val:dOv.EnterpriseValueToRevenue},
+    {label:'EV / EBITDA',val:dOv.EnterpriseValueToEBITDA},
+    {label:'Market Cap',val:fmt(dOv.MarketCapitalization),cls:'blue'},
+    {label:'Revenue TTM',val:fmt(dOv.RevenueTTM),cls:'blue'},
+    {label:'Profit Margin',val:pct(dOv.ProfitMargin),cls:parseFloat(dOv.ProfitMargin)>0.15?'green':'red'},
+    {label:'Oper. Margin',val:pct(dOv.OperatingMarginTTM),cls:parseFloat(dOv.OperatingMarginTTM)>0?'green':'red'},
+    {label:'Return on Assets',val:pct(dOv.ReturnOnAssetsTTM),cls:'green'},
+    {label:'Return on Equity',val:pct(dOv.ReturnOnEquityTTM),cls:'green'},
+  ];
+  const incomeM=[
+    {label:'Total Revenue',val:fmt(li.totalRevenue),cls:'blue'},
+    {label:'Gross Profit',val:fmt(li.grossProfit),cls:'green'},
+    {label:'Operating Income',val:fmt(li.operatingIncome),cls:parseFloat(li.operatingIncome)>0?'green':'red'},
+    {label:'Net Income',val:fmt(li.netIncome),cls:parseFloat(li.netIncome)>0?'green':'red'},
+    {label:'EBITDA',val:fmt(li.ebitda),cls:'blue'},
+    {label:'R&D Expense',val:fmt(li.researchAndDevelopment)},
+    {label:'Interest Expense',val:fmt(li.interestExpense)},
+  ];
+  const balM=[
+    {label:'Total Assets',val:fmt(lb.totalAssets),cls:'blue'},
+    {label:'Total Liabilities',val:fmt(lb.totalLiabilities),cls:'red'},
+    {label:'Shareholder Equity',val:fmt(lb.totalShareholderEquity),cls:'green'},
+    {label:'Cash',val:fmt(lb.cashAndCashEquivalentsAtCarryingValue),cls:'green'},
+    {label:'Short-term Debt',val:fmt(lb.shortTermDebt)},
+    {label:'Long-term Debt',val:fmt(lb.longTermDebt),cls:'red'},
+    {label:'Current Ratio',val:(()=>{const a=parseFloat(lb.totalCurrentAssets),b=parseFloat(lb.totalCurrentLiabilities);return(a&&b)?(a/b).toFixed(2):'—';})(),
+     cls:(()=>{const a=parseFloat(lb.totalCurrentAssets),b=parseFloat(lb.totalCurrentLiabilities),r=a&&b?a/b:0;return r>=2?'green':r>=1?'gold':'red';})()},
+  ];
+  const divs=[
+    {label:'Div. Yield (Annual)',val:pct(dOv.DividendYield),cls:'gold'},
+    {label:'Div. Yield (Monthly)',val:(()=>{const n=parseFloat(dOv.DividendYield);return isNaN(n)?'—':(n/12*100).toFixed(3)+'%';})(),cls:'gold'},
+    {label:'Dividend / Share',val:dOv.DividendPerShare},
+    {label:'Payout Ratio',val:pct(dOv.PayoutRatio)},
+  ];
+  const cards=arr=>arr.map((m,i)=>`<div class="card" style="animation-delay:${i*0.04}s"><div class="card-label">${m.label}${tipHtml(m.label)}</div><div class="card-value ${m.cls||''}">${m.val||'—'}</div>${m.extra||''}</div>`).join('');
+  const cacheBanner = showCacheBanner&&getCache(sym) ? `<div class="cache-banner"><span>💾 From cache · saved ${fmtAge(getCache(sym).ts)}</span><div class="cache-actions"><button class="cache-refresh-btn" onclick="loadOverview(true)">🔄 Refresh API</button></div></div>` : '';
+  el.innerHTML = cacheBanner+`
+    <div class="ov-header"><div class="ticker">${dOv.Symbol}</div><div><div class="company-name-txt">${dOv.Name||''}</div><div class="company-sector">${dOv.Sector||''} · ${dOv.Exchange||''}</div></div></div>
+    <div class="sec-label">Health Score ${tipHtml('Health Score')}</div>${renderHealth(dOv)}
+    <div class="sec-label">Valuation & Fundamentals</div><div class="metrics-grid">${cards(fundamentals)}</div>
+    <div class="sec-label">Income Statement <span style="font-size:.55rem;opacity:.5">${li.fiscalDateEnding||''}</span></div><div class="metrics-grid">${cards(incomeM)}</div>
+    <div class="sec-label">Balance Sheet</div><div class="metrics-grid">${cards(balM)}</div>
+    <div class="sec-label">Dividends</div><div class="metrics-grid">${cards(divs)}</div>
+    <div class="export-bar"><button class="btn btn-outline" onclick="exportOverview()">⬇ Export CSV</button></div>`;
+}
+
 
 function exportOverview(){
   if(!_ovData) return;
@@ -725,92 +808,218 @@ function exportCompare(){
 
 /* ── STOCK VS STOCK ── */
 async function loadVersus(){
-  const sym1 = document.getElementById('vs-sym1').value.trim().toUpperCase();
-  const sym2 = document.getElementById('vs-sym2').value.trim().toUpperCase();
-  if(!sym1 || !sym2) return;
+  const sym1=document.getElementById('vs-sym1').value.trim().toUpperCase();
+  const sym2=document.getElementById('vs-sym2').value.trim().toUpperCase();
+  if(!sym1||!sym2) return;
   if(!getKey()){ openSettings(); return; }
-  const el = document.getElementById('vs-result');
-
+  const el=document.getElementById('vs-result');
   try{
-    el.innerHTML = loading(`Fetching ${sym1}…`);
-    const d1 = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym1}&apikey=${getKey()}`);
-    if(!d1.Symbol){ el.innerHTML = errBox(`No data found for ${sym1}.`); return; }
-
-    el.innerHTML = loading(`Fetching ${sym2}…`);
+    el.innerHTML=loading(`Fetching ${sym1}…`);
+    const d1=await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym1}&apikey=${getKey()}`);
+    if(!d1.Symbol){ el.innerHTML=errBox(`No data for ${sym1}.`); return; }
+    el.innerHTML=loading(`Fetching ${sym2}…`);
     await delay(1200);
-    const d2 = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym2}&apikey=${getKey()}`);
-    if(!d2.Symbol){ el.innerHTML = errBox(`No data found for ${sym2}.`); return; }
+    const d2=await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym2}&apikey=${getKey()}`);
+    if(!d2.Symbol){ el.innerHTML=errBox(`No data for ${sym2}.`); return; }
 
-    // Metrics to compare: [label, key, lowerIsBetter]
-    const metrics = [
-      {label:'P/E Ratio',        key:'PERatio',              low:true,  note:'Lower = cheaper valuation'},
-      {label:'PEG Ratio',        key:'PEGRatio',             low:true,  note:'Lower = better growth value'},
-      {label:'EPS',              key:'EPS',                  low:false, note:'Higher = more earnings/share'},
-      {label:'Profit Margin',    key:'ProfitMargin',         low:false, note:'Higher = more efficient'},
-      {label:'Return on Equity', key:'ReturnOnEquityTTM',    low:false, note:'Higher = better returns'},
-      {label:'Oper. Margin',     key:'OperatingMarginTTM',   low:false, note:'Higher = better efficiency'},
-      {label:'Revenue TTM',      key:'RevenueTTM',           low:false, note:'Higher = more revenue'},
-      {label:'Market Cap',       key:'MarketCapitalization', low:false, note:'Higher = larger company'},
-      {label:'Dividend Yield',   key:'DividendYield',        low:false, note:'Higher = more income'},
-      {label:'Beta',             key:'Beta',                 low:true,  note:'Lower = less volatile'},
+    const metrics=[
+      {label:'P/E Ratio',key:'PERatio',low:true},
+      {label:'PEG Ratio',key:'PEGRatio',low:true},
+      {label:'EPS',key:'EPS',low:false},
+      {label:'Profit Margin',key:'ProfitMargin',low:false},
+      {label:'Return on Equity',key:'ReturnOnEquityTTM',low:false},
+      {label:'Oper. Margin',key:'OperatingMarginTTM',low:false},
+      {label:'Revenue TTM',key:'RevenueTTM',low:false},
+      {label:'Market Cap',key:'MarketCapitalization',low:false},
+      {label:'Div. Yield (Annual)',key:'DividendYield',low:false},
+      {label:'Beta',key:'Beta',low:true},
     ];
-
-    let score1 = 0, score2 = 0;
-    const rows = metrics.map(m => {
-      const v1 = parseFloat(d1[m.key]), v2 = parseFloat(d2[m.key]);
-      if(isNaN(v1) || isNaN(v2)) return {m, v1, v2, w:0};
-      const w1 = m.low ? v1 < v2 : v1 > v2;
-      const w2 = m.low ? v2 < v1 : v2 > v1;
-      if(w1) score1++;
-      if(w2) score2++;
-      return {m, v1, v2, w1, w2};
+    let s1=0,s2=0;
+    const rows=metrics.map(m=>{
+      const v1=parseFloat(d1[m.key]),v2=parseFloat(d2[m.key]);
+      if(isNaN(v1)||isNaN(v2)) return {m,v1,v2};
+      const w1=m.low?v1<v2:v1>v2, w2=m.low?v2<v1:v2>v1;
+      if(w1)s1++; if(w2)s2++;
+      return {m,v1,v2,w1,w2};
     });
-
-    const winner = score1 > score2 ? sym1 : score2 > score1 ? sym2 : null;
-    const fmtV = (key, v) => {
-      if(isNaN(v)) return '—';
-      if(['ProfitMargin','ReturnOnEquityTTM','OperatingMarginTTM','DividendYield'].includes(key)) return (v*100).toFixed(2)+'%';
-      if(['RevenueTTM','MarketCapitalization'].includes(key)) return fmt(v);
+    const fv=(key,v)=>{
+      if(isNaN(v))return'—';
+      if(['ProfitMargin','ReturnOnEquityTTM','OperatingMarginTTM','DividendYield'].includes(key))return(v*100).toFixed(2)+'%';
+      if(['RevenueTTM','MarketCapitalization'].includes(key))return fmt(v);
       return v.toFixed(2);
     };
+    const winner=s1>s2?sym1:s2>s1?sym2:null;
+    const winnerBanner=winner
+      ?`<div class="vs-winner-banner"><div><div class="vs-winner-title">🏆 ${winner} wins</div><div style="font-size:.65rem;color:var(--muted);margin-top:3px">Better across ${Math.max(s1,s2)} of ${rows.filter(r=>r.w1!==undefined).length} metrics</div></div><div class="vs-score">${s1} — ${s2}</div></div>`
+      :`<div class="vs-winner-banner"><div class="vs-winner-title" style="color:var(--text)">🤝 It's a tie!</div></div>`;
+    const rowsHtml=rows.map(r=>`<div class="vs-row">
+      <div class="vs-val left ${r.w1?'winner':r.w2?'loser':''}">${fv(r.m.key,r.v1)}</div>
+      <div class="vs-metric-cell">${r.m.label}${tipHtml(r.m.label)}</div>
+      <div class="vs-val right ${r.w2?'winner':r.w1?'loser':''}">${fv(r.m.key,r.v2)}</div>
+    </div>`).join('');
+    el.innerHTML=`
+      <div class="vs-grid">
+        <div><div class="vs-ticker-big">${sym1}</div><div class="company-name-txt">${d1.Name||''}</div><div class="company-sector">${d1.Sector||''}</div></div>
+        <div class="vs-divider-big">VS</div>
+        <div style="text-align:right"><div class="vs-ticker-big">${sym2}</div><div class="company-name-txt">${d2.Name||''}</div><div class="company-sector">${d2.Sector||''}</div></div>
+      </div>
+      ${winnerBanner}
+      <div class="sec-label">Head-to-Head</div>
+      <div class="vs-tbl-wrap">${rowsHtml}</div>
+      <div style="font-size:.6rem;color:var(--muted);text-align:center;margin-top:4px">🟢 Green = better value for that metric</div>`;
+  }catch(e){
+    el.innerHTML=e.message==='DAILY_LIMIT'
+      ?errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
+      :e.message==='RATE_LIMIT'
+      ?errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
+      :errBox('Network error.');
+  }
+}
 
-    const rowsHtml = rows.map(r => {
-      const val1 = fmtV(r.m.key, r.v1), val2 = fmtV(r.m.key, r.v2);
-      return `<div class="vs-row">
-        <div class="vs-val left ${r.w1?'winner':r.w2?'loser':''}">${val1}</div>
-        <div class="vs-metric" title="${r.m.note}">${r.m.label}</div>
-        <div class="vs-val right ${r.w2?'winner':r.w1?'loser':''}">${val2}</div>
-      </div>`;
-    }).join('');
+/* ── PRICE CHART ── */
+let _chartInstance = null;
 
-    const winnerHtml = winner
-      ? `<div class="vs-winner-banner">
-          <div>
-            <div class="vs-winner-label" style="color:var(--accent)">🏆 ${winner} wins</div>
-            <div class="vs-winner-sub">Better across ${Math.max(score1,score2)} out of ${rows.filter(r=>r.w1!==undefined).length} metrics</div>
-          </div>
-          <div class="vs-score">${score1} — ${score2}</div>
-        </div>`
-      : `<div class="vs-winner-banner"><div class="vs-winner-label">🤝 It's a tie!</div></div>`;
+async function loadChart(){
+  const sym = document.getElementById('chart-sym').value.trim().toUpperCase();
+  const period = document.getElementById('chart-period').value;
+  if(!sym) return;
+  if(!getKey()){ openSettings(); return; }
+  const el = document.getElementById('chart-result');
+
+  try{
+    el.innerHTML = loading('Loading price history…');
+    const data = await safeFetch(`${BASE}?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${sym}&outputsize=full&apikey=${getKey()}`);
+    if(!data['Time Series (Daily)']){ el.innerHTML = errBox('No price data found. Check symbol.'); return; }
+
+    const ts = data['Time Series (Daily)'];
+    const allDates = Object.keys(ts).sort();
+
+    // Filter by period
+    const now = new Date();
+    const cutoff = new Date(now);
+    if(period==='3M') cutoff.setMonth(cutoff.getMonth()-3);
+    else if(period==='6M') cutoff.setMonth(cutoff.getMonth()-6);
+    else if(period==='1Y') cutoff.setFullYear(cutoff.getFullYear()-1);
+    else if(period==='2Y') cutoff.setFullYear(cutoff.getFullYear()-2);
+    else if(period==='5Y') cutoff.setFullYear(cutoff.getFullYear()-5);
+    const cutoffStr = cutoff.toISOString().split('T')[0];
+    const dates = allDates.filter(d => d >= cutoffStr);
+
+    const closes  = dates.map(d => parseFloat(ts[d]['5. adjusted close']));
+    const opens   = dates.map(d => parseFloat(ts[d]['1. open']));
+    const highs   = dates.map(d => parseFloat(ts[d]['2. high']));
+    const lows    = dates.map(d => parseFloat(ts[d]['3. low']));
+    const volumes = dates.map(d => parseInt(ts[d]['6. volume']));
+
+    const first = closes[0], last = closes[closes.length-1];
+    const change = last - first, changePct = (change/first*100);
+    const isUp = change >= 0;
+    const hi = Math.max(...highs), lo = Math.min(...lows);
+    const avgVol = Math.round(volumes.reduce((a,b)=>a+b,0)/volumes.length);
+
+    // Label every ~10% of dates
+    const labelStep = Math.max(1, Math.floor(dates.length/8));
+    const labels = dates.map((d,i) => i%labelStep===0 ? d.slice(5) : '');
 
     el.innerHTML = `
-      <div class="vs-grid" style="margin-bottom:16px">
-        <div class="vs-col">
-          <div class="vs-ticker">${sym1}</div>
-          <div class="vs-company">${d1.Name||''}</div>
-          <div class="company-sector">${d1.Sector||''}</div>
+      <div class="chart-wrap">
+        <div class="chart-header">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--accent)">${sym}</div>
+            <div style="font-size:.65rem;color:var(--muted)">${data['Meta Data']?.['2. Symbol']||sym} · ${period} price history</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="chart-price">$${last.toFixed(2)}</div>
+            <div class="chart-change ${isUp?'up':'down'}">${isUp?'+':''}${changePct.toFixed(2)}%</div>
+          </div>
         </div>
-        <div class="vs-divider">VS</div>
-        <div class="vs-col" style="text-align:right">
-          <div class="vs-ticker" style="text-align:right">${sym2}</div>
-          <div class="vs-company" style="text-align:right">${d2.Name||''}</div>
-          <div class="company-sector" style="text-align:right">${d2.Sector||''}</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="priceChart"></canvas>
+          <div class="chart-tooltip" id="chartTooltip"></div>
         </div>
-      </div>
-      ${winnerHtml}
-      <div class="sec-label">Head-to-Head Metrics</div>
-      <div class="vs-tbl-wrap">${rowsHtml}</div>
-      <div style="font-size:.6rem;color:var(--muted);text-align:center">🟢 Green = better value for that metric</div>`;
+        <div class="chart-stats">
+          <div class="chart-stat"><div class="chart-stat-label">Period High</div><div class="chart-stat-val" style="color:var(--up)">$${hi.toFixed(2)}</div></div>
+          <div class="chart-stat"><div class="chart-stat-label">Period Low</div><div class="chart-stat-val" style="color:var(--down)">$${lo.toFixed(2)}</div></div>
+          <div class="chart-stat"><div class="chart-stat-label">Start Price</div><div class="chart-stat-val">$${first.toFixed(2)}</div></div>
+          <div class="chart-stat"><div class="chart-stat-label">Total Change</div><div class="chart-stat-val" style="color:${isUp?'var(--up)':'var(--down)'}">${isUp?'+':''}$${change.toFixed(2)}</div></div>
+          <div class="chart-stat"><div class="chart-stat-label">Avg Volume</div><div class="chart-stat-val" style="color:var(--blue)">${fmt(avgVol)}</div></div>
+          <div class="chart-stat"><div class="chart-stat-label">Data Points</div><div class="chart-stat-val">${dates.length} days</div></div>
+        </div>
+      </div>`;
+
+    // Draw chart with Canvas API (no external lib needed)
+    const canvas = document.getElementById('priceChart');
+    const ctx = canvas.getContext('2d');
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.offsetWidth * devicePixelRatio;
+    canvas.height = wrap.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const W = wrap.offsetWidth, H = wrap.offsetHeight;
+    const padL=48, padR=16, padT=16, padB=32;
+    const cW=W-padL-padR, cH=H-padT-padB;
+
+    const minP=lo*0.995, maxP=hi*1.005, rangeP=maxP-minP;
+    const xScale = i => padL + (i/(dates.length-1))*cW;
+    const yScale = v => padT + (1-(v-minP)/rangeP)*cH;
+
+    // Grid lines
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+    for(let i=0;i<5;i++){
+      const y=padT+(i/4)*cH;
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+cW,y); ctx.stroke();
+      const val=(maxP-(i/4)*rangeP).toFixed(0);
+      ctx.fillStyle='rgba(240,240,248,0.35)'; ctx.font=`${10*devicePixelRatio/devicePixelRatio}px JetBrains Mono,monospace`;
+      ctx.textAlign='right'; ctx.fillText('$'+val, padL-6, y+4);
+    }
+
+    // Volume bars (subtle, bottom)
+    const maxVol=Math.max(...volumes);
+    const volH=cH*0.15;
+    volumes.forEach((v,i)=>{
+      const x=xScale(i), bW=Math.max(1,cW/dates.length*0.7);
+      const bH=(v/maxVol)*volH;
+      ctx.fillStyle=closes[i]>=opens[i]?'rgba(0,229,160,0.12)':'rgba(255,95,87,0.1)';
+      ctx.fillRect(x-bW/2, padT+cH-bH, bW, bH);
+    });
+
+    // Area fill under line
+    const grad=ctx.createLinearGradient(0,padT,0,padT+cH);
+    grad.addColorStop(0, isUp?'rgba(0,229,160,0.18)':'rgba(255,95,87,0.18)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.moveTo(xScale(0), padT+cH);
+    closes.forEach((v,i)=>{ i===0?ctx.lineTo(xScale(0),yScale(v)):ctx.lineTo(xScale(i),yScale(v)); });
+    ctx.lineTo(xScale(closes.length-1), padT+cH);
+    ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+
+    // Price line
+    ctx.beginPath(); ctx.strokeStyle=isUp?'#00e5a0':'#ff5f57'; ctx.lineWidth=2; ctx.lineJoin='round';
+    closes.forEach((v,i)=>{ i===0?ctx.moveTo(xScale(0),yScale(v)):ctx.lineTo(xScale(i),yScale(v)); });
+    ctx.stroke();
+
+    // X axis date labels
+    ctx.fillStyle='rgba(240,240,248,0.35)'; ctx.textAlign='center'; ctx.font=`10px JetBrains Mono,monospace`;
+    labels.forEach((l,i)=>{ if(l) ctx.fillText(l, xScale(i), H-padB+18); });
+
+    // Tooltip on hover
+    const tooltip = document.getElementById('chartTooltip');
+    wrap.addEventListener('mousemove', e=>{
+      const rect=wrap.getBoundingClientRect();
+      const mx=e.clientX-rect.left-padL;
+      if(mx<0||mx>cW){ tooltip.style.display='none'; return; }
+      const idx=Math.round((mx/cW)*(dates.length-1));
+      if(idx<0||idx>=dates.length){ tooltip.style.display='none'; return; }
+      const x=xScale(idx), y=yScale(closes[idx]);
+      // Crosshair
+      const ctx2=canvas.getContext('2d');
+      // Just reuse existing draw — show tooltip
+      tooltip.style.display='block';
+      tooltip.style.left=(x+10)+'px';
+      tooltip.style.top=Math.max(0,y-30)+'px';
+      const chg=idx>0?((closes[idx]-closes[idx-1])/closes[idx-1]*100):0;
+      tooltip.innerHTML=`<b>${dates[idx]}</b><br>Close: <b style="color:var(--accent)">$${closes[idx].toFixed(2)}</b><br>Change: <span style="color:${chg>=0?'var(--up)':'var(--down)'}">${chg>=0?'+':''}${chg.toFixed(2)}%</span><br>Vol: ${fmt(volumes[idx])}`;
+    });
+    wrap.addEventListener('mouseleave',()=>{ tooltip.style.display='none'; });
 
   } catch(e){
     el.innerHTML = e.message==='DAILY_LIMIT'
