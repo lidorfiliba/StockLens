@@ -185,9 +185,41 @@ canvas#priceChart{width:100%!important;height:100%!important;}
   .health-wrap{flex-direction:column;}
   .settings-drawer{width:100vw;}
 }
+/* LOCK SCREEN */
+#lock-screen{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;}
+.lock-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 32px;max-width:380px;width:100%;text-align:center;animation:fadeUp .4s ease;}
+.lock-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent);margin-bottom:4px;}
+.lock-logo em{font-style:normal;color:var(--text);}
+.lock-sub{font-size:.65rem;color:var(--muted);letter-spacing:2px;margin-bottom:28px;}
+.lock-icon{font-size:2.2rem;margin-bottom:16px;}
+.lock-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:6px;}
+.lock-desc{font-size:.7rem;color:var(--muted);line-height:1.7;margin-bottom:24px;}
+.lock-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.9rem;text-align:center;letter-spacing:4px;text-transform:uppercase;outline:none;box-sizing:border-box;transition:border-color .2s;}
+.lock-input:focus{border-color:var(--accent);}
+.lock-input.error{border-color:var(--down);animation:shake .3s ease;}
+.lock-btn{width:100%;margin-top:12px;background:var(--accent);color:#000;border:none;border-radius:8px;padding:13px;font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;cursor:pointer;letter-spacing:1px;transition:filter .2s;}
+.lock-btn:hover{filter:brightness(1.1);}
+.lock-error{font-size:.68rem;color:var(--down);margin-top:10px;min-height:18px;}
+.lock-tg{margin-top:20px;font-size:.63rem;color:var(--muted);}
+.lock-tg a{color:var(--blue);text-decoration:none;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 </style>
 </head>
 <body>
+
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-logo">Stock<em>Lens</em></div>
+    <div class="lock-sub">FINANCIAL ANALYZER</div>
+    <div class="lock-icon">🔐</div>
+    <div class="lock-title">גישה למנויים בלבד</div>
+    <div class="lock-desc">הכנס את קוד הגישה השבועי<br>שנשלח לערוץ הטלגרם</div>
+    <input class="lock-input" id="lock-input" type="text" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off" spellcheck="false" />
+    <button class="lock-btn" onclick="checkAccess()">כניסה →</button>
+    <div class="lock-error" id="lock-error"></div>
+    <div class="lock-tg">מנוי לערוץ? <a href="https://t.me/MarketAlertsIL" target="_blank">הצטרף כאן →</a></div>
+  </div>
+</div>
 
 <canvas id="bg-canvas"></canvas>
 
@@ -460,6 +492,67 @@ function toggleTheme(){
 }
 
 updateKeyUI();
+
+/* ── LOCK SCREEN ── */
+const GIST_ID = '18407cae7b0a4a4c2f1313ab835dceb4';
+const GIST_URL = `https://api.github.com/gists/${GIST_ID}`;
+const ACCESS_KEY = 'sl_access';
+
+async function checkAccess(){
+  const input = document.getElementById('lock-input').value.trim().toUpperCase();
+  const errEl = document.getElementById('lock-error');
+  const inputEl = document.getElementById('lock-input');
+  if(!input){ errEl.textContent = 'הכנס קוד גישה'; return; }
+  errEl.textContent = 'בודק…';
+  try{
+    const r = await fetch(GIST_URL, {headers:{'Accept':'application/vnd.github.v3+json'}});
+    const data = await r.json();
+    const raw = data.files['stocklens_access.json']?.content;
+    if(!raw) throw new Error('no file');
+    const {code, expires} = JSON.parse(raw);
+    if(input === code.toUpperCase() && new Date(expires) >= new Date()){
+      localStorage.setItem(ACCESS_KEY, JSON.stringify({code, expires}));
+      document.getElementById('lock-screen').style.display = 'none';
+      errEl.textContent = '';
+    } else {
+      errEl.textContent = 'קוד שגוי או פג תוקף — בדוק בערוץ הטלגרם';
+      inputEl.classList.add('error');
+      setTimeout(()=>inputEl.classList.remove('error'), 400);
+    }
+  }catch(e){
+    errEl.textContent = 'שגיאת חיבור — נסה שוב';
+  }
+}
+
+function checkStoredAccess(){
+  try{
+    const stored = JSON.parse(localStorage.getItem(ACCESS_KEY)||'null');
+    if(stored && new Date(stored.expires) >= new Date()){
+      fetch(GIST_URL, {headers:{'Accept':'application/vnd.github.v3+json'}})
+        .then(r=>r.json()).then(data=>{
+          const raw = data.files['stocklens_access.json']?.content;
+          if(!raw) return;
+          const {code} = JSON.parse(raw);
+          if(stored.code !== code){
+            localStorage.removeItem(ACCESS_KEY);
+            document.getElementById('lock-screen').style.display = 'flex';
+          }
+        }).catch(()=>{});
+      document.getElementById('lock-screen').style.display = 'none';
+      return;
+    }
+  }catch(e){}
+  document.getElementById('lock-screen').style.display = 'flex';
+}
+
+document.getElementById('lock-input').addEventListener('keydown', e=>{ if(e.key==='Enter') checkAccess(); });
+document.getElementById('lock-input').addEventListener('input', e=>{
+  let v = e.target.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+  if(v.length > 4) v = v.slice(0,4) + '-' + v.slice(4,8);
+  e.target.value = v;
+});
+
+checkStoredAccess();
 
 /* ── UTILS ── */
 const BASE = 'https://www.alphavantage.co/query';
