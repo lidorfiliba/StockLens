@@ -213,16 +213,9 @@ canvas#priceChart{width:100%!important;height:100%!important;}
     <div class="lock-sub">FINANCIAL ANALYZER</div>
     <div class="lock-icon">🔐</div>
     <div class="lock-title">גישה למנויים בלבד</div>
-    <div class="lock-desc">התחבר עם חשבון הטלגרם שלך<br>ובדוק שאתה מנוי ל-MarketAlertsIL</div>
-    <div id="tg-login-wrap" style="display:flex;justify-content:center;margin:20px 0 8px">
-      <script async src="https://telegram.org/js/telegram-widget.js?22"
-        data-telegram-login="StockLensAuth_bot"
-        data-size="large"
-        data-radius="8"
-        data-onauth="onTelegramAuth(user)"
-        data-request-access="write">
-      </script>
-    </div>
+    <div class="lock-desc">הכנס את קוד הגישה השבועי<br>שנשלח לערוץ הטלגרם</div>
+    <input class="lock-input" id="lock-input" type="text" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off" spellcheck="false" />
+    <button class="lock-btn" onclick="checkAccess()">כניסה →</button>
     <div class="lock-error" id="lock-error"></div>
     <div class="lock-tg">עדיין לא מנוי? <a href="https://t.me/MarketAlertsIL" target="_blank">הצטרף כאן →</a></div>
   </div>
@@ -501,30 +494,32 @@ function toggleTheme(){
 updateKeyUI();
 
 /* ── LOCK SCREEN ── */
-const WORKER_URL = 'https://stocklens-auth.lidorfiliba.workers.dev';
-const ACCESS_KEY = 'sl_tg_access';
+const GIST_ID = '18407cae7b0a4a4c2f1313ab835dceb4';
+const GIST_URL = `https://api.github.com/gists/${GIST_ID}`;
+const ACCESS_KEY = 'sl_access';
 
-async function onTelegramAuth(user){
+async function checkAccess(){
+  const input = document.getElementById('lock-input').value.trim().toUpperCase();
   const errEl = document.getElementById('lock-error');
-  errEl.textContent = 'בודק מנוי…';
+  const inputEl = document.getElementById('lock-input');
+  if(!input){ errEl.textContent = 'הכנס קוד גישה'; return; }
+  errEl.textContent = 'בודק…';
   try{
-    const r = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(user)
-    });
+    const r = await fetch(GIST_URL, {headers:{'Accept':'application/vnd.github.v3+json'}});
     const data = await r.json();
-    if(data.ok){
-      localStorage.setItem(ACCESS_KEY, JSON.stringify({
-        id: user.id,
-        name: user.first_name,
-        ts: Date.now()
-      }));
+    const raw = data.files['stocklens_access.json']?.content;
+    if(!raw) throw new Error('no file');
+    const {code, expires} = JSON.parse(raw);
+    if(input === code.toUpperCase() && new Date(expires) >= new Date()){
+      localStorage.setItem(ACCESS_KEY, JSON.stringify({code, expires}));
       document.getElementById('lock-screen').style.display = 'none';
+      errEl.textContent = '';
     } else {
-      errEl.textContent = 'אינך מנוי ל-MarketAlertsIL — הצטרף ונסה שוב';
+      errEl.textContent = 'קוד שגוי או פג תוקף — בדוק בערוץ הטלגרם';
+      inputEl.classList.add('error');
+      setTimeout(()=>inputEl.classList.remove('error'), 400);
     }
-  } catch(e){
+  }catch(e){
     errEl.textContent = 'שגיאת חיבור — נסה שוב';
   }
 }
@@ -532,14 +527,30 @@ async function onTelegramAuth(user){
 function checkStoredAccess(){
   try{
     const stored = JSON.parse(localStorage.getItem(ACCESS_KEY)||'null');
-    // תוקף ל-7 ימים
-    if(stored && (Date.now() - stored.ts) < 7 * 24 * 60 * 60 * 1000){
+    if(stored && new Date(stored.expires) >= new Date()){
+      fetch(GIST_URL, {headers:{'Accept':'application/vnd.github.v3+json'}})
+        .then(r=>r.json()).then(data=>{
+          const raw = data.files['stocklens_access.json']?.content;
+          if(!raw) return;
+          const {code} = JSON.parse(raw);
+          if(stored.code !== code){
+            localStorage.removeItem(ACCESS_KEY);
+            document.getElementById('lock-screen').style.display = 'flex';
+          }
+        }).catch(()=>{});
       document.getElementById('lock-screen').style.display = 'none';
       return;
     }
   }catch(e){}
   document.getElementById('lock-screen').style.display = 'flex';
 }
+
+document.getElementById('lock-input').addEventListener('keydown', e=>{ if(e.key==='Enter') checkAccess(); });
+document.getElementById('lock-input').addEventListener('input', e=>{
+  let v = e.target.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+  if(v.length > 4) v = v.slice(0,4) + '-' + v.slice(4,8);
+  e.target.value = v;
+});
 
 checkStoredAccess();
 
