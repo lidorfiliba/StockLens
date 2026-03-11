@@ -695,40 +695,46 @@ async function fmpFetch(endpoint, params={}){
 
 /* Convert FMP data to AV-compatible format */
 async function fmpGetOverview(sym){
-  const profile = await fmpFetch('profile/' + sym, {});
-  const p = (Array.isArray(profile) ? profile[0] : profile) || {};
-  if(!p.symbol) throw new Error('NO_DATA');
-
-  // Fetch remaining in parallel - gracefully handle failures
-  const [ratiosRaw, incomeRaw, balanceRaw] = await Promise.allSettled([
-    fmpFetch('ratios-ttm/' + sym, {}),
+  // Fetch profile + income + balance in parallel (all free tier)
+  const [profileRaw, incomeRaw, balanceRaw] = await Promise.allSettled([
+    fmpFetch('profile/' + sym, {}),
     fmpFetch('income-statement/' + sym, {limit: 1}),
     fmpFetch('balance-sheet-statement/' + sym, {limit: 1}),
   ]);
-  const rt  = (ratiosRaw.status==='fulfilled'  && Array.isArray(ratiosRaw.value)  ? ratiosRaw.value[0]  : ratiosRaw.value)  || {};
-  const inc = (incomeRaw.status==='fulfilled'  && Array.isArray(incomeRaw.value)  ? incomeRaw.value[0]  : incomeRaw.value)  || {};
-  const bal = (balanceRaw.status==='fulfilled' && Array.isArray(balanceRaw.value) ? balanceRaw.value[0] : balanceRaw.value) || {};
 
-  // Build AV-compatible dOv object
+  const p   = (profileRaw.status==='fulfilled'  && Array.isArray(profileRaw.value)  ? profileRaw.value[0]  : profileRaw.value)  || {};
+  const inc = (incomeRaw.status==='fulfilled'   && Array.isArray(incomeRaw.value)   ? incomeRaw.value[0]   : incomeRaw.value)   || {};
+  const bal = (balanceRaw.status==='fulfilled'  && Array.isArray(balanceRaw.value)  ? balanceRaw.value[0]  : balanceRaw.value)  || {};
+
+  if(!p.symbol) throw new Error('NO_DATA');
+
+  // Calculate margins from income statement
+  const profitMargin = inc.revenue && inc.netIncome ? inc.netIncome / inc.revenue : null;
+  const operMargin   = inc.revenue && inc.operatingIncome ? inc.operatingIncome / inc.revenue : null;
+  const roa          = bal.totalAssets && inc.netIncome ? inc.netIncome / bal.totalAssets : null;
+  const roe          = bal.totalStockholdersEquity && inc.netIncome ? inc.netIncome / bal.totalStockholdersEquity : null;
+  const payoutRatio  = inc.netIncome && p.lastDiv && p.volume ? null : null; // skip - unreliable
+
+  // Build AV-compatible dOv object using profile fields (free tier)
   const dOv = {
-    Symbol: p.symbol,
+    Symbol: p.symbol?.toUpperCase(),
     Name: p.companyName,
     Sector: p.sector,
     Exchange: p.exchangeShortName,
     MarketCapitalization: p.mktCap,
-    PERatio: rt.peRatioTTM,
-    PEGRatio: rt.pegRatioTTM,
+    PERatio: p.pe,
+    PEGRatio: null,
     EPS: p.eps,
-    EnterpriseValueToRevenue: rt.enterpriseValueMultipleTTM,
-    EnterpriseValueToEBITDA: rt.evToFreeCashFlowTTM,
+    EnterpriseValueToRevenue: null,
+    EnterpriseValueToEBITDA: null,
     RevenueTTM: inc.revenue,
-    ProfitMargin: rt.netProfitMarginTTM,
-    OperatingMarginTTM: rt.operatingProfitMarginTTM,
-    ReturnOnAssetsTTM: rt.returnOnAssetsTTM,
-    ReturnOnEquityTTM: rt.returnOnEquityTTM,
-    DividendYield: rt.dividendYieldTTM,
+    ProfitMargin: profitMargin,
+    OperatingMarginTTM: operMargin,
+    ReturnOnAssetsTTM: roa,
+    ReturnOnEquityTTM: roe,
+    DividendYield: p.lastDiv && p.price ? p.lastDiv / p.price : null,
     DividendPerShare: p.lastDiv,
-    PayoutRatio: rt.payoutRatioTTM,
+    PayoutRatio: null,
     Beta: p.beta,
     _source: 'FMP'
   };
