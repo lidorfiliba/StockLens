@@ -685,21 +685,21 @@ async function fmpFetch(endpoint, params={}){
   const key = getFmpKey();
   if(!key) throw new Error('NO_FMP_KEY');
   const q = new URLSearchParams({...params, apikey: key});
-  // Use v3 API which is available on free tier
-  const r = await fetch(`https://financialmodelingprep.com/api/v3/${endpoint}?${q}`);
+  const r = await fetch(`${FMP_BASE}/${endpoint}?${q}`);
   const d = await r.json();
   if(d && d['Error Message']) throw new Error('FMP_ERROR');
   if(d && d.message && d.message.includes('limit')) throw new Error('FMP_LIMIT');
+  if(Array.isArray(d) && d.length === 0) throw new Error('NO_DATA');
   return d;
 }
 
 /* Convert FMP data to AV-compatible format */
 async function fmpGetOverview(sym){
-  // Fetch profile + income + balance in parallel (all free tier)
+  // stable endpoints - all available on free tier
   const [profileRaw, incomeRaw, balanceRaw] = await Promise.allSettled([
-    fmpFetch('profile/' + sym, {}),
-    fmpFetch('income-statement/' + sym, {limit: 1}),
-    fmpFetch('balance-sheet-statement/' + sym, {limit: 1}),
+    fmpFetch('profile', {symbol: sym}),
+    fmpFetch('income-statement', {symbol: sym, limit: 1}),
+    fmpFetch('balance-sheet-statement', {symbol: sym, limit: 1}),
   ]);
 
   const p   = (profileRaw.status==='fulfilled'  && Array.isArray(profileRaw.value)  ? profileRaw.value[0]  : profileRaw.value)  || {};
@@ -712,10 +712,9 @@ async function fmpGetOverview(sym){
   const profitMargin = inc.revenue && inc.netIncome ? inc.netIncome / inc.revenue : null;
   const operMargin   = inc.revenue && inc.operatingIncome ? inc.operatingIncome / inc.revenue : null;
   const roa          = bal.totalAssets && inc.netIncome ? inc.netIncome / bal.totalAssets : null;
-  const roe          = bal.totalStockholdersEquity && inc.netIncome ? inc.netIncome / bal.totalStockholdersEquity : null;
-  const payoutRatio  = inc.netIncome && p.lastDiv && p.volume ? null : null; // skip - unreliable
+  const roe          = (bal.totalStockholdersEquity || bal.totalEquity) && inc.netIncome
+                       ? inc.netIncome / (bal.totalStockholdersEquity || bal.totalEquity) : null;
 
-  // Build AV-compatible dOv object using profile fields (free tier)
   const dOv = {
     Symbol: p.symbol?.toUpperCase(),
     Name: p.companyName,
@@ -739,7 +738,6 @@ async function fmpGetOverview(sym){
     _source: 'FMP'
   };
 
-  // Build AV-compatible dInc
   const dInc = {
     annualReports: [{
       fiscalDateEnding: inc.date,
@@ -754,13 +752,12 @@ async function fmpGetOverview(sym){
     quarterlyReports: []
   };
 
-  // Build AV-compatible dBal
   const dBal = {
     annualReports: [{
       fiscalDateEnding: bal.date,
       totalAssets: bal.totalAssets,
       totalLiabilities: bal.totalLiabilities,
-      totalShareholderEquity: bal.totalStockholdersEquity,
+      totalShareholderEquity: bal.totalStockholdersEquity || bal.totalEquity,
       cashAndCashEquivalentsAtCarryingValue: bal.cashAndCashEquivalents,
       shortTermDebt: bal.shortTermDebt,
       longTermDebt: bal.longTermDebt,
@@ -774,9 +771,8 @@ async function fmpGetOverview(sym){
 }
 
 async function fmpGetQuarterlyIncome(sym){
-  const data = await fmpFetch('income-statement/' + sym, {period: 'quarter', limit: 12});
+  const data = await fmpFetch('income-statement', {symbol: sym, period: 'quarter', limit: 12});
   if(!Array.isArray(data) || !data.length) throw new Error('FMP_ERROR');
-  // Convert to AV format
   return {
     quarterlyReports: data.map(q => ({
       fiscalDateEnding: q.date,
