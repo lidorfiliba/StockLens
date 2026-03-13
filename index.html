@@ -1219,6 +1219,7 @@ async function fmpGetOverview(sym){
 }
 
 async function fmpGetQuarterlyIncome(sym){
+  // FMP stable uses separate endpoint for quarterly data
   const data = await fmpFetch('income-statement', {symbol: sym, period: 'quarter', limit: 12});
   if(!Array.isArray(data) || !data.length) throw new Error('FMP_ERROR');
   return {
@@ -1628,7 +1629,11 @@ async function loadCompare(){
       ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
       : e.message==='RATE_LIMIT'
       ? errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
-      : errBox('Network error.');
+      : e.message==='FMP_ERROR'
+      ? errBox('No quarterly data for this symbol.')
+      : e.message==='NO_DATA'
+      ? errBox('No data found. Check the symbol.')
+      : errBox('Network error: ' + e.message);
   }
 }
 
