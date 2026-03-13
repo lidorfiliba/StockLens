@@ -304,6 +304,60 @@ footer b{color:var(--accent);font-weight:500;}
 .guide-check-num{min-width:24px;height:24px;background:var(--accent);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;flex-shrink:0;}
 .guide-check-item b{color:var(--text);}
 .guide-footer{text-align:center;font-size:.6rem;color:var(--muted);padding-top:16px;opacity:.6;}
+
+/* ── COMPARE KEY NOTICE ── */
+.cmp-notice {
+  border-radius: 12px;
+  padding: 18px 22px;
+  font-size: .78rem;
+  line-height: 1.75;
+  animation: fadeUp .35s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cmp-notice.warn {
+  background: rgba(247,201,72,0.07);
+  border: 1px solid rgba(247,201,72,0.28);
+  color: var(--text2);
+}
+.cmp-notice.ok {
+  background: rgba(0,229,160,0.05);
+  border: 1px solid rgba(0,229,160,0.18);
+  color: var(--text2);
+}
+.cmp-notice-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: .9rem;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.cmp-notice.warn .cmp-notice-title { color: var(--gold); }
+.cmp-notice.ok  .cmp-notice-title  { color: var(--up);   }
+.cmp-notice-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.cmp-notice-icon { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+.cmp-notice-text b { color: var(--text); }
+.cmp-notice-text a { color: var(--accent); text-decoration: none; }
+.cmp-notice-text a:hover { text-decoration: underline; }
+.cmp-notice-badge {
+  display: inline-block;
+  font-size: .6rem;
+  padding: 3px 9px;
+  border-radius: 100px;
+  letter-spacing: .5px;
+  font-weight: 500;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.badge-green { background: rgba(0,229,160,0.12); color: var(--up);   border: 1px solid rgba(0,229,160,0.25); }
+.badge-red   { background: rgba(255,95,87,0.10);  color: var(--down); border: 1px solid rgba(255,95,87,0.22);  }
+.badge-gold  { background: rgba(247,201,72,0.10); color: var(--gold); border: 1px solid rgba(247,201,72,0.25); }
 </style>
 </head>
 <body>
@@ -426,6 +480,7 @@ footer b{color:var(--accent);font-weight:500;}
       </div>
       <button class="btn" onclick="loadCompare()">Compare →</button>
     </div>
+    <div id="cmp-key-notice" style="margin-bottom:16px"></div>
     <div id="cmp-result"><div class="empty"><span class="empty-icon">⚡</span>Select two quarters to compare</div></div>
   </div>
   <div class="panel" id="panel-versus">
@@ -963,7 +1018,85 @@ function saveKey(){
   localStorage.removeItem(AV_LIMIT_KEY); // reset limit flag on new key
   document.getElementById('apiKeyInput').value = '';
   showKeyStatus('ok','✓ AV Key saved.');
-  updateKeyUI();
+  
+/* ── COMPARE PANEL NOTICE ── */
+function renderCompareNotice() {
+  const el = document.getElementById('cmp-key-notice');
+  if (!el) return;
+  const hasAV  = !!getKey();
+  const hasFMP = !!getFmpKey();
+
+  if (hasAV) {
+    // AV key present — full support
+    el.innerHTML = `<div class="cmp-notice ok">
+      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">🔑</span>
+        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (hasFMP && !hasAV) {
+    // FMP only — limited
+    el.innerHTML = `<div class="cmp-notice warn">
+      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">❌</span>
+        <span class="cmp-notice-text">
+          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">✅</span>
+        <span class="cmp-notice-text">
+          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
+          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">💎</span>
+        <span class="cmp-notice-text">
+          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
+          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row" style="margin-top:4px">
+        <span class="cmp-notice-icon">⚙️</span>
+        <span class="cmp-notice-text">
+          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
+          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
+        </span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // No key at all — generic prompt
+  el.innerHTML = `<div class="cmp-notice warn">
+    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">✅</span>
+      <span class="cmp-notice-text">
+        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
+        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
+      </span>
+    </div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">💎</span>
+      <span class="cmp-notice-text">
+        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
+      </span>
+    </div>
+    <div style="margin-top:4px">
+      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
+    </div>
+  </div>`;
+}
+
+updateKeyUI();
+renderCompareNotice();
 }
 
 function clearKey(){
@@ -971,7 +1104,85 @@ function clearKey(){
   localStorage.removeItem(AV_LIMIT_KEY);
   document.getElementById('apiKeyInput').value = '';
   showKeyStatus('err','AV Key removed.');
-  updateKeyUI();
+  
+/* ── COMPARE PANEL NOTICE ── */
+function renderCompareNotice() {
+  const el = document.getElementById('cmp-key-notice');
+  if (!el) return;
+  const hasAV  = !!getKey();
+  const hasFMP = !!getFmpKey();
+
+  if (hasAV) {
+    // AV key present — full support
+    el.innerHTML = `<div class="cmp-notice ok">
+      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">🔑</span>
+        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (hasFMP && !hasAV) {
+    // FMP only — limited
+    el.innerHTML = `<div class="cmp-notice warn">
+      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">❌</span>
+        <span class="cmp-notice-text">
+          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">✅</span>
+        <span class="cmp-notice-text">
+          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
+          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">💎</span>
+        <span class="cmp-notice-text">
+          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
+          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row" style="margin-top:4px">
+        <span class="cmp-notice-icon">⚙️</span>
+        <span class="cmp-notice-text">
+          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
+          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
+        </span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // No key at all — generic prompt
+  el.innerHTML = `<div class="cmp-notice warn">
+    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">✅</span>
+      <span class="cmp-notice-text">
+        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
+        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
+      </span>
+    </div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">💎</span>
+      <span class="cmp-notice-text">
+        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
+      </span>
+    </div>
+    <div style="margin-top:4px">
+      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
+    </div>
+  </div>`;
+}
+
+updateKeyUI();
+renderCompareNotice();
 }
 
 function saveFmpKey(){
@@ -980,14 +1191,170 @@ function saveFmpKey(){
   localStorage.setItem(FMP_STORE, val);
   document.getElementById('fmpKeyInput').value = '';
   showFmpKeyStatus('ok','✓ FMP Key saved.');
-  updateKeyUI();
+  
+/* ── COMPARE PANEL NOTICE ── */
+function renderCompareNotice() {
+  const el = document.getElementById('cmp-key-notice');
+  if (!el) return;
+  const hasAV  = !!getKey();
+  const hasFMP = !!getFmpKey();
+
+  if (hasAV) {
+    // AV key present — full support
+    el.innerHTML = `<div class="cmp-notice ok">
+      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">🔑</span>
+        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (hasFMP && !hasAV) {
+    // FMP only — limited
+    el.innerHTML = `<div class="cmp-notice warn">
+      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">❌</span>
+        <span class="cmp-notice-text">
+          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">✅</span>
+        <span class="cmp-notice-text">
+          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
+          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">💎</span>
+        <span class="cmp-notice-text">
+          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
+          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row" style="margin-top:4px">
+        <span class="cmp-notice-icon">⚙️</span>
+        <span class="cmp-notice-text">
+          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
+          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
+        </span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // No key at all — generic prompt
+  el.innerHTML = `<div class="cmp-notice warn">
+    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">✅</span>
+      <span class="cmp-notice-text">
+        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
+        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
+      </span>
+    </div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">💎</span>
+      <span class="cmp-notice-text">
+        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
+      </span>
+    </div>
+    <div style="margin-top:4px">
+      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
+    </div>
+  </div>`;
+}
+
+updateKeyUI();
+renderCompareNotice();
 }
 
 function clearFmpKey(){
   localStorage.removeItem(FMP_STORE);
   document.getElementById('fmpKeyInput').value = '';
   showFmpKeyStatus('err','FMP Key removed.');
-  updateKeyUI();
+  
+/* ── COMPARE PANEL NOTICE ── */
+function renderCompareNotice() {
+  const el = document.getElementById('cmp-key-notice');
+  if (!el) return;
+  const hasAV  = !!getKey();
+  const hasFMP = !!getFmpKey();
+
+  if (hasAV) {
+    // AV key present — full support
+    el.innerHTML = `<div class="cmp-notice ok">
+      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">🔑</span>
+        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (hasFMP && !hasAV) {
+    // FMP only — limited
+    el.innerHTML = `<div class="cmp-notice warn">
+      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">❌</span>
+        <span class="cmp-notice-text">
+          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">✅</span>
+        <span class="cmp-notice-text">
+          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
+          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">💎</span>
+        <span class="cmp-notice-text">
+          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
+          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row" style="margin-top:4px">
+        <span class="cmp-notice-icon">⚙️</span>
+        <span class="cmp-notice-text">
+          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
+          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
+        </span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // No key at all — generic prompt
+  el.innerHTML = `<div class="cmp-notice warn">
+    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">✅</span>
+      <span class="cmp-notice-text">
+        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
+        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
+      </span>
+    </div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">💎</span>
+      <span class="cmp-notice-text">
+        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
+      </span>
+    </div>
+    <div style="margin-top:4px">
+      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
+    </div>
+  </div>`;
+}
+
+updateKeyUI();
+renderCompareNotice();
 }
 
 function clearCache(){
@@ -1015,6 +1382,7 @@ function updateKeyUI(){
   // Show AV limit warning if active
   const limitWarn = document.getElementById('avLimitWarn');
   if(limitWarn) limitWarn.style.display = isAvLimited() && getFmpKey() ? 'flex' : 'none';
+  renderCompareNotice();
 }
 
 function openSettings(){ document.getElementById('settingsOverlay').classList.add('open'); }
@@ -1025,7 +1393,85 @@ function toggleTheme(){
   h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark');
 }
 
+
+/* ── COMPARE PANEL NOTICE ── */
+function renderCompareNotice() {
+  const el = document.getElementById('cmp-key-notice');
+  if (!el) return;
+  const hasAV  = !!getKey();
+  const hasFMP = !!getFmpKey();
+
+  if (hasAV) {
+    // AV key present — full support
+    el.innerHTML = `<div class="cmp-notice ok">
+      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">🔑</span>
+        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (hasFMP && !hasAV) {
+    // FMP only — limited
+    el.innerHTML = `<div class="cmp-notice warn">
+      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">❌</span>
+        <span class="cmp-notice-text">
+          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">✅</span>
+        <span class="cmp-notice-text">
+          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
+          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row">
+        <span class="cmp-notice-icon">💎</span>
+        <span class="cmp-notice-text">
+          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
+          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
+        </span>
+      </div>
+      <div class="cmp-notice-row" style="margin-top:4px">
+        <span class="cmp-notice-icon">⚙️</span>
+        <span class="cmp-notice-text">
+          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
+          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
+        </span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // No key at all — generic prompt
+  el.innerHTML = `<div class="cmp-notice warn">
+    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">✅</span>
+      <span class="cmp-notice-text">
+        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
+        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
+      </span>
+    </div>
+    <div class="cmp-notice-row">
+      <span class="cmp-notice-icon">💎</span>
+      <span class="cmp-notice-text">
+        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
+      </span>
+    </div>
+    <div style="margin-top:4px">
+      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
+    </div>
+  </div>`;
+}
+
 updateKeyUI();
+renderCompareNotice();
 
 /* ── LOCK SCREEN ── */
 const GIST_ID = '18407cae7b0a4a4c2f1313ab835dceb4';
@@ -1129,9 +1575,18 @@ async function fmpFetch(endpoint, params={}){
   if(!key) throw new Error('NO_FMP_KEY');
   const q = new URLSearchParams({...params, apikey: key});
   const r = await fetch(`${FMP_BASE}/${endpoint}?${q}`);
-  const d = await r.json();
+  const text = await r.text();
+  let d;
+  try { d = JSON.parse(text); }
+  catch(e) {
+    if(text.toLowerCase().includes('premium') || text.toLowerCase().includes('upgrade'))
+      throw new Error('FMP_PREMIUM');
+    if(text.toLowerCase().includes('invalid') || text.toLowerCase().includes('unauthorized'))
+      throw new Error('FMP_INVALID_KEY');
+    throw new Error('FMP_ERROR');
+  }
   if(d && d['Error Message']) throw new Error('FMP_ERROR');
-  if(d && d.message && d.message.includes('limit')) throw new Error('FMP_LIMIT');
+  if(d && d.message && (d.message.includes('limit') || d.message.includes('premium'))) throw new Error('FMP_PREMIUM');
   if(Array.isArray(d) && d.length === 0) throw new Error('NO_DATA');
   return d;
 }
@@ -1567,17 +2022,33 @@ async function loadCompare(){
 
     if(!qe && fmpKey){
       el.innerHTML = loading('Loading via FMP…');
-      const fmpInc = await fmpGetQuarterlyIncome(sym);
-      qi = fmpInc.quarterlyReports;
-      qe = qi.map(q => ({
-        fiscalDateEnding: q.fiscalDateEnding,
-        fiscalYear: q.fiscalYear,
-        period: q.period,
-        reportedEPS: q.reportedEPS || q.eps || '—',
-        estimatedEPS: '—',
-        surprise: '—',
-        surprisePercentage: '—',
-      }));
+      try {
+        const fmpInc = await fmpGetQuarterlyIncome(sym);
+        qi = fmpInc.quarterlyReports;
+        qe = qi.map(q => ({
+          fiscalDateEnding: q.fiscalDateEnding,
+          fiscalYear: q.fiscalYear,
+          period: q.period,
+          reportedEPS: q.reportedEPS || q.eps || '—',
+          estimatedEPS: '—',
+          surprise: '—',
+          surprisePercentage: '—',
+        }));
+      } catch(fmpErr) {
+        if(fmpErr.message === 'FMP_PREMIUM') {
+          const avNote = avKey
+            ? '<br><br>⚡ יש לך מפתח AV — ייתכן שהגעת ל-25 הבקשות היומיות. נסה שוב מחר.'
+            : '<br><br>💡 <b>פתרון:</b> הוסף מפתח <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color:var(--accent)">Alpha Vantage (חינמי)</a> בהגדרות — הוא תומך בנתונים רבעוניים ללא תשלום.';
+          el.innerHTML = `<div class="err-box">
+            ⚠ הנתונים הרבעוניים של FMP דורשים תוכנית Premium.<br>
+            המפתח החינמי של FMP מוגבל לנתונים שנתיים בלבד.
+            ${avNote}
+            <br><br><span style="font-size:.65rem;opacity:.7">לחלופין, שדרג ב־<a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank" style="color:var(--accent)">financialmodelingprep.com</a></span>
+          </div>`;
+          return;
+        }
+        throw fmpErr;
+      }
     }
 
     if(!qe){ el.innerHTML = errBox('No earnings data. Check symbol/key.'); return; }
@@ -1665,6 +2136,10 @@ async function loadCompare(){
       ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
       : e.message==='RATE_LIMIT'
       ? errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
+      : e.message==='FMP_PREMIUM'
+      ? errBox('This endpoint requires an FMP Premium plan. Try using an Alpha Vantage key instead, or upgrade your FMP account.')
+      : e.message==='FMP_INVALID_KEY'
+      ? errBox('FMP API key is invalid or unauthorized. Check your key in Settings.')
       : e.message==='FMP_ERROR'
       ? errBox('No quarterly data for this symbol.')
       : e.message==='NO_DATA'
@@ -1763,6 +2238,10 @@ async function loadVersus(){
       ?errBox('No API key set. Open Settings and add a key.')
       :e.message==='NO_DATA'
       ?errBox('Symbol not found. Check the ticker and try again.')
+      :e.message==='FMP_PREMIUM'
+      ?errBox('This endpoint requires an FMP Premium plan. Try using an Alpha Vantage key instead.')
+      :e.message==='FMP_INVALID_KEY'
+      ?errBox('FMP API key is invalid. Check your key in Settings.')
       :e.message==='FMP_ERROR'
       ?errBox('FMP returned no data for this symbol. Try another.')
       :errBox('Network error: ' + e.message);
