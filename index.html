@@ -257,6 +257,37 @@ footer b{color:var(--accent);font-weight:500;}
 .lock-tg{margin-top:20px;font-size:.63rem;color:var(--muted);}
 .lock-tg a{color:var(--blue);text-decoration:none;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ── GUIDE ── */
+.guide-wrap{padding:4px 0 24px;}
+.guide-intro{text-align:center;padding:20px 0 24px;border-bottom:1px solid var(--border);}
+.guide-title{font-size:1.3rem;font-weight:700;color:var(--accent);letter-spacing:.05em;margin-bottom:6px;}
+.guide-subtitle{font-size:.72rem;color:var(--muted);line-height:1.6;}
+.guide-section{border-bottom:1px solid var(--border);padding:20px 0;}
+.guide-section:last-child{border-bottom:none;}
+.guide-sec-title{font-size:.8rem;font-weight:700;color:var(--text);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;}
+.guide-sec-body{font-size:.73rem;color:var(--text2);line-height:1.7;}
+.guide-sec-body p{margin:0 0 8px;}
+.guide-metric{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+.guide-metric:last-child{margin-bottom:0;}
+.guide-metric-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;}
+.guide-metric-name{font-size:.78rem;font-weight:700;color:var(--text);margin-right:4px;}
+.guide-badge{font-size:.6rem;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.03em;}
+.guide-badge.green{background:rgba(0,229,160,0.15);color:var(--up);border:1px solid rgba(0,229,160,0.3);}
+.guide-badge.gold{background:rgba(255,214,0,0.12);color:var(--gold);border:1px solid rgba(255,214,0,0.25);}
+.guide-badge.red{background:rgba(255,95,87,0.12);color:var(--down);border:1px solid rgba(255,95,87,0.25);}
+.guide-scale{display:flex;flex-direction:column;gap:5px;margin:10px 0;}
+.guide-scale-item{font-size:.68rem;padding:6px 12px;border-radius:7px;font-weight:500;}
+.guide-scale-item.green{background:rgba(0,229,160,0.1);color:var(--up);border-left:3px solid var(--up);}
+.guide-scale-item.gold{background:rgba(255,214,0,0.08);color:var(--gold);border-left:3px solid var(--gold);}
+.guide-scale-item.red{background:rgba(255,95,87,0.08);color:var(--down);border-left:3px solid var(--down);}
+.guide-tip{background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.2);border-radius:8px;padding:10px 13px;font-size:.68rem;color:var(--text2);margin-top:10px;}
+.guide-warn{background:rgba(255,214,0,0.07);border:1px solid rgba(255,214,0,0.2);border-radius:8px;padding:10px 13px;font-size:.68rem;color:var(--gold);margin-top:8px;}
+.guide-checklist{display:flex;flex-direction:column;gap:8px;}
+.guide-check-item{display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:12px;}
+.guide-check-num{min-width:24px;height:24px;background:var(--accent);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;flex-shrink:0;}
+.guide-check-item b{color:var(--text);}
+.guide-footer{text-align:center;font-size:.6rem;color:var(--muted);padding-top:16px;opacity:.6;}
 </style>
 </head>
 <body>
@@ -340,6 +371,7 @@ footer b{color:var(--accent);font-weight:500;}
     <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
     <button class="tab" onclick="switchTab('compare')">⚡ Quarter Compare</button>
     <button class="tab" onclick="switchTab('versus')">⚔ Stock vs Stock</button>
+    <button class="tab" onclick="switchTab('guide')">📖 Guide</button>
   </div>
 
   <div class="panel active" id="panel-overview">
@@ -388,6 +420,392 @@ footer b{color:var(--accent);font-weight:500;}
       <button class="btn" onclick="loadVersus()">Compare →</button>
     </div>
     <div id="vs-result"><div class="empty"><span class="empty-icon">⚔</span>Enter two stock symbols to compare</div></div>
+  </div>
+
+  <div class="panel" id="panel-guide">
+    <div class="guide-wrap">
+
+      <div class="guide-intro">
+        <div class="guide-title">📖 How to Read a Stock</div>
+        <div class="guide-subtitle">מדריך מלא לקריאת הנתונים שמוצגים ב-StockLens — ואיך לדעת אם המניה שווה קנייה</div>
+      </div>
+
+      <!-- SECTION 1: Health Score -->
+      <div class="guide-section">
+        <div class="guide-sec-title">🏥 Health Score</div>
+        <div class="guide-sec-body">
+          <p>ה-Health Score הוא ציון כולל בין 0-100 שמחשב StockLens על פי כמה מדדים פיננסיים מרכזיים.</p>
+          <div class="guide-scale">
+            <div class="guide-scale-item green">75–100 · Strong Buy — פונדמנטלס חזקים מאוד</div>
+            <div class="guide-scale-item gold">60–74 · Bullish — טוב עם כמה הסתייגויות קטנות</div>
+            <div class="guide-scale-item gold">45–59 · Neutral — מעורב, דורש בדיקה נוספת</div>
+            <div class="guide-scale-item red">30–44 · Caution — חלשה במספר אזורים</div>
+            <div class="guide-scale-item red">0–29 · Avoid — פונדמנטלס גרועים</div>
+          </div>
+          <div class="guide-tip">💡 Health Score הוא נקודת התחלה בלבד — תמיד בדוק את הפרטים מתחת.</div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Valuation -->
+      <div class="guide-section">
+        <div class="guide-sec-title">💰 שווי ותמחור</div>
+        <div class="guide-sec-body">
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">P/E Ratio</span>
+              <span class="guide-badge red">Overvalued &gt;25</span>
+              <span class="guide-badge gold">Fair 15–25</span>
+              <span class="guide-badge green">Cheap &lt;15</span>
+            </div>
+            <p>כמה משלמים על כל דולר אחד של רווח. P/E של 20 אומר שהשוק מוכן לשלם $20 על כל $1 רווח.</p>
+            <p><b>נמוך מ-15</b> = מניה זולה יחסית לרווח. <b>מעל 25</b> = יקרה, צריך צמיחה חזקה כדי להצדיק.</p>
+            <div class="guide-warn">⚠ P/E גבוה לא תמיד רע — חברות צמיחה (כמו NVIDIA) יכולות להצדיק P/E של 40+</div>
+          </div>
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">EPS (Earnings Per Share)</span>
+              <span class="guide-badge green">גבוה = טוב</span>
+            </div>
+            <p>רווח נקי לכל מניה. EPS גבוה ועולה ברבעונים = סימן מצוין לבריאות החברה.</p>
+            <p><b>הכי חשוב:</b> שהוא יהיה <b>חיובי</b> ו<b>גדל</b> לאורך זמן.</p>
+          </div>
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Market Cap</span>
+            </div>
+            <p>שווי שוק כולל של החברה. עוזר להבין את גודל ורמת הסיכון:</p>
+            <div class="guide-scale">
+              <div class="guide-scale-item green">מעל $10B · Large Cap — יציב, סיכון נמוך</div>
+              <div class="guide-scale-item gold">$2B–$10B · Mid Cap — פוטנציאל צמיחה בינוני</div>
+              <div class="guide-scale-item red">מתחת $2B · Small Cap — פוטנציאל גבוה, סיכון גבוה</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SECTION 3: Profitability -->
+      <div class="guide-section">
+        <div class="guide-sec-title">📈 רווחיות</div>
+        <div class="guide-sec-body">
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Profit Margin</span>
+              <span class="guide-badge green">&gt;20% מצוין</span>
+              <span class="guide-badge gold">10–20% טוב</span>
+              <span class="guide-badge red">&lt;10% חלש</span>
+            </div>
+            <p>כמה אחוז מכל דולר הכנסות נשאר כרווח נקי. Profit Margin של 25% = על כל $100 הכנסה, $25 רווח.</p>
+            <p>תלוי בתחום — תוכנה בדרך כלל מעל 20%, קמעונאות בדרך כלל 2–5%.</p>
+          </div>
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Operating Margin</span>
+              <span class="guide-badge green">&gt;15% טוב</span>
+              <span class="guide-badge red">שלילי = בעיה</span>
+            </div>
+            <p>רווחיות תפעולית לפני מסים וריבית. מדד טוב לייעולות תפעולי של החברה.</p>
+          </div>
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Return on Equity (ROE)</span>
+              <span class="guide-badge green">&gt;15% חזק</span>
+              <span class="guide-badge gold">10–15% סביר</span>
+              <span class="guide-badge red">&lt;10% חלש</span>
+            </div>
+            <p>כמה רווח החברה מייצרת מהכסף שהמשקיעים שמו בה. ROE של 20% = על כל $100 הון עצמי, $20 רווח.</p>
+          </div>
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Return on Assets (ROA)</span>
+              <span class="guide-badge green">&gt;5% טוב</span>
+              <span class="guide-badge red">&lt;2% חלש</span>
+            </div>
+            <p>כמה רווח החברה מייצרת מכלל הנכסים שלה. מדד ליעילות ניצול הנכסים.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SECTION 4: Balance Sheet -->
+      <div class="guide-section">
+        <div class="guide-sec-title">🏦 מאזן פיננסי</div>
+        <div class="guide-sec-body">
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Current Ratio</span>
+              <span class="guide-badge green">&gt;1.5 בריא</span>
+              <span class="guide-badge gold">1–1.5 גבולי</span>
+              <span class="guide-badge red">&lt;1 בעיה</span>
+            </div>
+            <p>נכסים שוטפים חלקי התחייבויות שוטפות. מראה אם לחברה יש מספיק כסף לשלם את חובותיה קצרי הטווח.</p>
+            <p>Current Ratio מתחת ל-1 = החברה חייבת יותר ממה שיש לה בקופה לטווח הקצר — סיכון נזילות.</p>
+          </div>
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Long-term Debt</span>
+              <span class="guide-badge green">נמוך יחסית לנכסים</span>
+              <span class="guide-badge red">גבוה = סיכון</span>
+            </div>
+            <p>חוב לטווח ארוך. בדוק ביחס ל-Total Assets ול-Net Income — כמה שנים ייקח לשלם את החוב?</p>
+            <p><b>כלל אצבע:</b> אם החוב הכולל גדול פי 3 מה-EBITDA — כדאי להיות זהיר.</p>
+          </div>
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Shareholder Equity</span>
+              <span class="guide-badge green">חיובי = טוב</span>
+              <span class="guide-badge red">שלילי = בעיה</span>
+            </div>
+            <p>מה שנשאר לבעלי המניות אחרי כל החובות. ערך שלילי = חברה חייבת יותר ממה שיש לה.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SECTION 5: Dividends -->
+      <div class="guide-section">
+        <div class="guide-sec-title">💸 דיבידנדים</div>
+        <div class="guide-sec-body">
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Dividend Yield</span>
+              <span class="guide-badge green">2–5% אידיאלי</span>
+              <span class="guide-badge red">&gt;8% — בדוק למה</span>
+            </div>
+            <p>אחוז ממחיר המניה שמשולם כדיבידנד בשנה. Yield של 3% = על השקעה של $10,000 תקבל $300 בשנה.</p>
+            <p>Yield גבוה מאוד (8%+) לפעמים אומר שמחיר המניה ירד בחדות — לא בהכרח סימן טוב.</p>
+          </div>
+
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Payout Ratio</span>
+              <span class="guide-badge green">20–60% בר-קיימא</span>
+              <span class="guide-badge red">&gt;80% מסוכן</span>
+            </div>
+            <p>כמה אחוז מהרווח מחולק כדיבידנד. Payout Ratio של 90%+ = החברה מחלקת כמעט כל רווחיה, אין כסף להשקעה.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SECTION 6: Checklist -->
+      <div class="guide-section">
+        <div class="guide-sec-title">✅ Checklist — איך לקרוא מניה ב-5 דקות</div>
+        <div class="guide-sec-body">
+          <div class="guide-checklist">
+            <div class="guide-check-item">
+              <span class="guide-check-num">1</span>
+              <div><b>Health Score מעל 60?</b> — אם כן, המשך. אם לא, שאל למה.</div>
+            </div>
+            <div class="guide-check-item">
+              <span class="guide-check-num">2</span>
+              <div><b>EPS חיובי וגדל?</b> — עבור ל-Quarter Compare ובדוק מגמה.</div>
+            </div>
+            <div class="guide-check-item">
+              <span class="guide-check-num">3</span>
+              <div><b>Profit Margin מעל 10%?</b> — החברה עושה כסף בפועל.</div>
+            </div>
+            <div class="guide-check-item">
+              <span class="guide-check-num">4</span>
+              <div><b>Current Ratio מעל 1?</b> — יש לה כסף לשלם חובות קצרי טווח.</div>
+            </div>
+            <div class="guide-check-item">
+              <span class="guide-check-num">5</span>
+              <div><b>P/E הגיוני לתחום?</b> — השווה מול מתחרים עם Stock vs Stock.</div>
+            </div>
+            <div class="guide-check-item">
+              <span class="guide-check-num">6</span>
+              <div><b>חוב לא מטריד?</b> — Long-term Debt קטן יחסית ל-EBITDA.</div>
+            </div>
+          </div>
+          <div class="guide-tip" style="margin-top:16px">💡 אם עברת 4 מתוך 6 — המניה ראויה לבדיקה עמוקה יותר. אם פחות מ-3 — כדאי לשקול מחדש.</div>
+        </div>
+      </div>
+
+      <div class="guide-footer">
+        <div>StockLens Guide · מיועד למטרות לימוד בלבד · אינו מהווה ייעוץ השקעות</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="panel" id="panel-guide">
+    <div class="guide-wrap">
+
+      <div class="guide-intro">
+        <div class="guide-title">📖 How to Read a Stock</div>
+        <div class="guide-subtitle">מדריך לקריאת הנתונים ב-StockLens — ואיך לדעת אם המניה שווה קנייה</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-sec-title">🏥 Health Score</div>
+        <div class="guide-sec-body">
+          <p>ציון כולל 0–100 שמחשב StockLens על פי מדדים פיננסיים מרכזיים.</p>
+          <div class="guide-scale">
+            <div class="guide-scale-item green">75–100 · Strong Buy — פונדמנטלס חזקים</div>
+            <div class="guide-scale-item gold">60–74 · Bullish — טוב עם הסתייגויות קטנות</div>
+            <div class="guide-scale-item gold">45–59 · Neutral — מעורב, דורש בדיקה</div>
+            <div class="guide-scale-item red">30–44 · Caution — חלש במספר אזורים</div>
+            <div class="guide-scale-item red">0–29 · Avoid — פונדמנטלס גרועים</div>
+          </div>
+          <div class="guide-tip">💡 Health Score הוא נקודת התחלה — תמיד בדוק את הפרטים מתחת.</div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-sec-title">💰 שווי ותמחור</div>
+        <div class="guide-sec-body">
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">P/E Ratio</span>
+              <span class="guide-badge green">&lt;15 זול</span>
+              <span class="guide-badge gold">15–25 הוגן</span>
+              <span class="guide-badge red">&gt;25 יקר</span>
+            </div>
+            <p>כמה משלמים על כל $1 רווח. P/E של 20 = השוק משלם $20 על כל $1 רווח שנתי.</p>
+            <div class="guide-warn">⚠ P/E גבוה לא תמיד רע — חברות צמיחה כמו NVIDIA יכולות להצדיק P/E של 40+</div>
+          </div>
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">EPS (Earnings Per Share)</span>
+              <span class="guide-badge green">חיובי וגדל = מצוין</span>
+            </div>
+            <p>רווח נקי לכל מניה. הכי חשוב שיהיה חיובי ושיגדל ברבעונים — בדוק ב-Quarter Compare.</p>
+          </div>
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Market Cap</span>
+            </div>
+            <div class="guide-scale">
+              <div class="guide-scale-item green">מעל $10B · Large Cap — יציב, סיכון נמוך</div>
+              <div class="guide-scale-item gold">$2B–$10B · Mid Cap — פוטנציאל בינוני</div>
+              <div class="guide-scale-item red">מתחת $2B · Small Cap — פוטנציאל גבוה, סיכון גבוה</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-sec-title">📈 רווחיות</div>
+        <div class="guide-sec-body">
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Profit Margin</span>
+              <span class="guide-badge green">&gt;20% מצוין</span>
+              <span class="guide-badge gold">10–20% טוב</span>
+              <span class="guide-badge red">&lt;10% חלש</span>
+            </div>
+            <p>כמה אחוז מכל $1 הכנסות נשאר כרווח נקי. תלוי בתחום — תוכנה בד"כ 20%+, קמעונאות 2–5%.</p>
+          </div>
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Operating Margin</span>
+              <span class="guide-badge green">&gt;15% טוב</span>
+              <span class="guide-badge red">שלילי = בעיה</span>
+            </div>
+            <p>רווחיות תפעולית לפני מסים וריבית. מדד לייעולות התפעולי של החברה.</p>
+          </div>
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Return on Equity (ROE)</span>
+              <span class="guide-badge green">&gt;15% חזק</span>
+              <span class="guide-badge gold">10–15% סביר</span>
+              <span class="guide-badge red">&lt;10% חלש</span>
+            </div>
+            <p>כמה רווח החברה מייצרת מהכסף שהמשקיעים שמו בה. ROE של 20% = $20 רווח על כל $100 הון עצמי.</p>
+          </div>
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Return on Assets (ROA)</span>
+              <span class="guide-badge green">&gt;5% טוב</span>
+              <span class="guide-badge red">&lt;2% חלש</span>
+            </div>
+            <p>כמה רווח על כלל הנכסים. מדד לייעולות ניצול הנכסים של החברה.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-sec-title">🏦 מאזן פיננסי</div>
+        <div class="guide-sec-body">
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Current Ratio</span>
+              <span class="guide-badge green">&gt;1.5 בריא</span>
+              <span class="guide-badge gold">1–1.5 גבולי</span>
+              <span class="guide-badge red">&lt;1 סיכון</span>
+            </div>
+            <p>נכסים שוטפים חלקי התחייבויות שוטפות. מתחת ל-1 = אין מספיק כסף לשלם חובות קצרי טווח.</p>
+          </div>
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Long-term Debt</span>
+              <span class="guide-badge green">נמוך יחסית לנכסים</span>
+              <span class="guide-badge red">גבוה = סיכון</span>
+            </div>
+            <p>כלל אצבע: אם החוב הכולל גדול פי 3 מה-EBITDA — כדאי להיזהר.</p>
+          </div>
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Shareholder Equity</span>
+              <span class="guide-badge green">חיובי = טוב</span>
+              <span class="guide-badge red">שלילי = בעיה</span>
+            </div>
+            <p>מה שנשאר לבעלי המניות אחרי כל החובות. ערך שלילי = חברה חייבת יותר ממה שיש לה.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-sec-title">💸 דיבידנדים</div>
+        <div class="guide-sec-body">
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Dividend Yield</span>
+              <span class="guide-badge green">2–5% אידיאלי</span>
+              <span class="guide-badge red">&gt;8% — בדוק למה</span>
+            </div>
+            <p>אחוז ממחיר המניה שמשולם כדיבידנד שנתי. Yield גבוה מדי (8%+) לפעמים מסמן ירידת מחיר — לא סימן טוב.</p>
+          </div>
+          <div class="guide-metric">
+            <div class="guide-metric-head">
+              <span class="guide-metric-name">Payout Ratio</span>
+              <span class="guide-badge green">20–60% בר-קיימא</span>
+              <span class="guide-badge red">&gt;80% מסוכן</span>
+            </div>
+            <p>כמה אחוז מהרווח מחולק כדיבידנד. מעל 80% = החברה מחלקת כמעט הכל — אין כסף לצמיחה.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-sec-title">✅ Checklist — קריאת מניה ב-5 דקות</div>
+        <div class="guide-sec-body">
+          <div class="guide-checklist">
+            <div class="guide-check-item"><span class="guide-check-num">1</span><div><b>Health Score מעל 60?</b> — אם כן, המשך. אם לא, שאל למה.</div></div>
+            <div class="guide-check-item"><span class="guide-check-num">2</span><div><b>EPS חיובי וגדל?</b> — עבור ל-Quarter Compare ובדוק מגמה לאורך רבעונים.</div></div>
+            <div class="guide-check-item"><span class="guide-check-num">3</span><div><b>Profit Margin מעל 10%?</b> — החברה עושה כסף בפועל.</div></div>
+            <div class="guide-check-item"><span class="guide-check-num">4</span><div><b>Current Ratio מעל 1?</b> — יש לה נזילות לשלם חובות קצרי טווח.</div></div>
+            <div class="guide-check-item"><span class="guide-check-num">5</span><div><b>P/E הגיוני לתחום?</b> — השווה מול מתחרים עם Stock vs Stock.</div></div>
+            <div class="guide-check-item"><span class="guide-check-num">6</span><div><b>חוב לא מטריד?</b> — Long-term Debt קטן יחסית ל-EBITDA.</div></div>
+          </div>
+          <div class="guide-tip" style="margin-top:16px">💡 עברת 4 מתוך 6? המניה ראויה לבדיקה עמוקה. פחות מ-3? שקול מחדש.</div>
+          <div class="guide-warn" style="margin-top:10px">⚠ המידע מוצג למטרות לימוד בלבד ואינו מהווה ייעוץ השקעות.</div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
 </div>
@@ -656,7 +1074,7 @@ checkStoredAccess();
 const BASE = 'https://www.alphavantage.co/query';
 
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['overview','compare','versus'][i]===t));
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['overview','compare','versus','guide'][i]===t));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`panel-${t}`).classList.add('active');
 }
