@@ -1359,6 +1359,7 @@ renderCompareNotice();
 
 function clearCache(){
   localStorage.removeItem(CACHE_STORE);
+  localStorage.removeItem(CMP_CACHE_STORE);
   closeSettings();
   setTimeout(()=>{ alert('Cache cleared!'); location.reload(); }, 200);
 }
@@ -1790,6 +1791,11 @@ function saveCache(sym,data){try{const c=JSON.parse(localStorage.getItem(CACHE_S
 function getCache(sym){try{const c=JSON.parse(localStorage.getItem(CACHE_STORE)||'{}');return c[sym]||null;}catch(e){return null;}}
 function fmtAge(ts){const m=Math.floor((Date.now()-ts)/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
 
+/* ── COMPARE CACHE ── */
+const CMP_CACHE_STORE='sl_cache_cmp';
+function saveCmpCache(sym,data){try{const c=JSON.parse(localStorage.getItem(CMP_CACHE_STORE)||'{}');c[sym]={data,ts:Date.now()};const k=Object.keys(c);if(k.length>8)delete c[k[0]];localStorage.setItem(CMP_CACHE_STORE,JSON.stringify(c));}catch(e){}}
+function getCmpCache(sym){try{const c=JSON.parse(localStorage.getItem(CMP_CACHE_STORE)||'{}');return c[sym]||null;}catch(e){return null;}}
+
 /* ── TOOLTIPS ── */
 const TIPS={
   'P/E Ratio':'Price-to-Earnings: כמה משלמים על כל $1 רווח. נמוך = זול יותר. מעל 25 = יקר.',
@@ -1991,7 +1997,7 @@ function exportOverview(){
 }
 
 /* ── COMPARE ── */
-async function loadCompare(){
+async function loadCompare(forceRefresh=false){
   const sym = document.getElementById('cmp-sym').value.trim().toUpperCase();
   const q1=document.getElementById('cq1').value, y1=document.getElementById('cy1').value;
   const q2=document.getElementById('cq2').value, y2=document.getElementById('cy2').value;
@@ -1999,6 +2005,21 @@ async function loadCompare(){
   if(!getKey() && !getFmpKey()){ openSettings(); return; }
   const el = document.getElementById('cmp-result');
   const qm = {Q1:'03',Q2:'06',Q3:'09',Q4:'12'};
+
+  // ── Cache check ──
+  if(!forceRefresh){
+    const cached = getCmpCache(sym);
+    if(cached){
+      el.innerHTML = `<div class="cache-banner">
+        <span>💾 Cached data for <b>${sym}</b> · saved ${fmtAge(cached.ts)}</span>
+        <div class="cache-actions">
+          <button class="cache-use-btn" onclick="renderCmpFromCache('${sym}','${q1}','${y1}','${q2}','${y2}')">Use Cached</button>
+          <button class="cache-refresh-btn" onclick="loadCompare(true)">🔄 Refresh API</button>
+        </div></div>`;
+      return;
+    }
+  }
+
   try{
     const avKey = getKey(), fmpKey = getFmpKey();
     let qe, qi;
@@ -2052,6 +2073,10 @@ async function loadCompare(){
     }
 
     if(!qe){ el.innerHTML = errBox('No earnings data. Check symbol/key.'); return; }
+
+    // ── Save to cache ──
+    saveCmpCache(sym, {qe, qi});
+
     const qe_=qe, qi_=qi;
     const qe2=qe_, qi2=qi_;
 
@@ -2121,16 +2146,7 @@ async function loadCompare(){
       }).join('');
     }
 
-    el.innerHTML = `
-      <div class="ov-header">
-        <div class="ticker">${sym}</div>
-        <div><div class="company-name-txt">${q1} ${y1} vs ${q2} ${y2}</div><div class="company-sector">Quarterly Comparison</div></div>
-      </div>
-      <div class="sec-label">EPS & Earnings</div>
-      <div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead><tbody>${buildTable(epsRows)}</tbody></table></div>
-      ${incRows.length ? `<div class="sec-label">Income Statement</div><div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead><tbody>${buildTable(incRows)}</tbody></table></div>` : '<div style="font-size:.7rem;color:var(--muted);margin-top:12px">Quarterly income data unavailable for this symbol.</div>'}
-      <div style="margin-top:12px;font-size:.6rem;color:var(--muted)">Fiscal ${y1}: ${e1.fiscalDateEnding} · Fiscal ${y2}: ${e2.fiscalDateEnding}</div>
-      <div class="export-bar"><button class="btn btn-outline" onclick="exportCompare()">⬇ Export CSV</button></div>`;
+    renderCmpResult(el, sym, q1, y1, q2, y2, e1, e2, i1, i2, buildTable, epsRows, incRows, false);
   } catch(e){
     el.innerHTML = e.message==='DAILY_LIMIT'
       ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
@@ -2146,6 +2162,85 @@ async function loadCompare(){
       ? errBox('No data found. Check the symbol.')
       : errBox('Network error: ' + e.message);
   }
+}
+
+function renderCmpResult(el, sym, q1, y1, q2, y2, e1, e2, i1, i2, buildTable, epsRows, incRows, fromCache){
+  const cacheBadge = fromCache
+    ? `<span style="font-size:.6rem;color:var(--muted);margin-left:10px">💾 from cache · <button onclick="loadCompare(true)" style="background:none;border:none;color:var(--accent);font-family:inherit;font-size:.6rem;cursor:pointer;padding:0">🔄 Refresh</button></span>`
+    : '';
+  el.innerHTML = `
+    <div class="ov-header">
+      <div class="ticker">${sym}</div>
+      <div>
+        <div class="company-name-txt" style="display:flex;align-items:center;gap:6px">${q1} ${y1} vs ${q2} ${y2}${cacheBadge}</div>
+        <div class="company-sector">Quarterly Comparison</div>
+      </div>
+    </div>
+    <div class="sec-label">EPS & Earnings</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead><tbody>${buildTable(epsRows)}</tbody></table></div>
+    ${incRows.length ? `<div class="sec-label">Income Statement</div><div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead><tbody>${buildTable(incRows)}</tbody></table></div>` : '<div style="font-size:.7rem;color:var(--muted);margin-top:12px">Quarterly income data unavailable for this symbol.</div>'}
+    <div style="margin-top:12px;font-size:.6rem;color:var(--muted)">Fiscal ${y1}: ${e1.fiscalDateEnding} · Fiscal ${y2}: ${e2.fiscalDateEnding}</div>
+    <div class="export-bar"><button class="btn btn-outline" onclick="exportCompare()">⬇ Export CSV</button></div>`;
+}
+
+function renderCmpFromCache(sym, q1, y1, q2, y2){
+  const cached = getCmpCache(sym);
+  if(!cached) { loadCompare(true); return; }
+  const el = document.getElementById('cmp-result');
+  const {qe, qi} = cached.data;
+  const qm = {Q1:'03',Q2:'06',Q3:'09',Q4:'12'};
+
+  const findQ=(arr,yr,q)=>{
+    const byPeriod = arr.find(e => String(e.fiscalYear)===String(yr) && e.period===q);
+    if(byPeriod) return byPeriod;
+    const m = qm[q];
+    const byExactMonth = arr.find(e => e.fiscalDateEnding?.startsWith(yr+'-'+m));
+    if(byExactMonth) return byExactMonth;
+    const targetMonth = parseInt(m, 10);
+    return arr.find(e => {
+      if(!e.fiscalDateEnding) return false;
+      const [eYear, eMonth] = e.fiscalDateEnding.split('-').map(Number);
+      if(String(eYear) !== String(yr)) return false;
+      return Math.abs(eMonth - targetMonth) <= 1;
+    });
+  };
+
+  const e1=findQ(qe,y1,q1), e2=findQ(qe,y2,q2);
+  const i1=qi?findQ(qi,y1,q1):null, i2=qi?findQ(qi,y2,q2):null;
+
+  if(!e1||!e2){
+    const avail = qe.slice(0,8).map(e => e.fiscalYear&&e.period ? `${e.fiscalYear} ${e.period}` : e.fiscalDateEnding).join(', ');
+    el.innerHTML = errBox(`Quarter not found in cache. Available: ${avail}<br><button onclick="loadCompare(true)" style="margin-top:8px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:inherit;font-size:.7rem;padding:6px 14px;cursor:pointer">🔄 Refresh from API</button>`);
+    return;
+  }
+
+  _cmpData = {sym,q1,y1,q2,y2,e1,e2,i1,i2};
+
+  const epsRows=[
+    {name:'Reported EPS',  k1:e1.reportedEPS,        k2:e2.reportedEPS},
+    {name:'Estimated EPS', k1:e1.estimatedEPS,        k2:e2.estimatedEPS},
+    {name:'EPS Surprise',  k1:e1.surprise,            k2:e2.surprise},
+    {name:'Surprise %',    k1:e1.surprisePercentage,  k2:e2.surprisePercentage, isPct:true},
+  ];
+  const incRows = i1&&i2 ? [
+    {name:'Total Revenue',    k1:i1.totalRevenue,    k2:i2.totalRevenue,    big:true},
+    {name:'Gross Profit',     k1:i1.grossProfit,     k2:i2.grossProfit,     big:true},
+    {name:'Operating Income', k1:i1.operatingIncome, k2:i2.operatingIncome, big:true},
+    {name:'Net Income',       k1:i1.netIncome,       k2:i2.netIncome,       big:true},
+    {name:'EBITDA',           k1:i1.ebitda,          k2:i2.ebitda,          big:true},
+  ] : [];
+
+  function buildTable(rows){
+    return rows.map((r,i)=>{
+      const v1=parseFloat(r.k1), v2=parseFloat(r.k2), diff=v1-v2, dp=v2!==0?(diff/Math.abs(v2)*100):0;
+      const f = r.big ? n=>isNaN(n)?'—':fmt(n) : r.isPct ? n=>isNaN(n)?'—':n.toFixed(2)+'%' : n=>isNaN(n)?'—':n.toFixed(4);
+      const cls = diff>0?'pos':diff<0?'neg':'';
+      const ds = isNaN(diff)?'—':`<span class="${cls}">${diff>=0?'+':''}${f(diff)} (${dp>=0?'+':''}${dp.toFixed(1)}%)</span>`;
+      return `<tr style="animation-delay:${i*0.055}s"><td class="metric-col">${r.name}</td><td>${f(v1)}</td><td>${f(v2)}</td><td>${ds}</td></tr>`;
+    }).join('');
+  }
+
+  renderCmpResult(el, sym, q1, y1, q2, y2, e1, e2, i1, i2, buildTable, epsRows, incRows, true);
 }
 
 function exportCompare(){
