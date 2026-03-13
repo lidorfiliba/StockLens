@@ -1225,6 +1225,8 @@ async function fmpGetQuarterlyIncome(sym){
   return {
     quarterlyReports: data.map(q => ({
       fiscalDateEnding: q.date,
+      fiscalYear: q.fiscalYear,
+      period: q.period,
       totalRevenue: q.revenue,
       grossProfit: q.grossProfit,
       operatingIncome: q.operatingIncome,
@@ -1567,9 +1569,10 @@ async function loadCompare(){
       el.innerHTML = loading('Loading via FMP…');
       const fmpInc = await fmpGetQuarterlyIncome(sym);
       qi = fmpInc.quarterlyReports;
-      // Build fake qe from FMP income data
       qe = qi.map(q => ({
         fiscalDateEnding: q.fiscalDateEnding,
+        fiscalYear: q.fiscalYear,
+        period: q.period,
         reportedEPS: q.reportedEPS || q.eps || '—',
         estimatedEPS: '—',
         surprise: '—',
@@ -1579,14 +1582,21 @@ async function loadCompare(){
 
     if(!qe){ el.innerHTML = errBox('No earnings data. Check symbol/key.'); return; }
     const qe_=qe, qi_=qi;
-    // reassign for rest of function
     const qe2=qe_, qi2=qi_;
-    const findQ=(arr,yr,m)=>arr.find(e=>e.fiscalDateEnding?.startsWith(yr+'-'+m));
-    const e1=findQ(qe2,y1,qm[q1]), e2=findQ(qe2,y2,qm[q2]);
-    const i1=findQ(qi2,y1,qm[q1]), i2=findQ(qi2,y2,qm[q2]);
+
+    // FMP returns fiscalYear + period (Q1/Q2/Q3/Q4) — match by that first, fallback to date month
+    const findQ=(arr,yr,q)=>{
+      const byPeriod = arr.find(e => e.fiscalYear===yr && e.period===q);
+      if(byPeriod) return byPeriod;
+      const m = qm[q];
+      return arr.find(e => e.fiscalDateEnding?.startsWith(yr+'-'+m));
+    };
+    const e1=findQ(qe2,y1,q1), e2=findQ(qe2,y2,q2);
+    const i1=findQ(qi2,y1,q1), i2=findQ(qi2,y2,q2);
 
     if(!e1||!e2){
-      el.innerHTML = errBox(`Quarter not found. Available: ${qe.slice(0,8).map(e=>e.fiscalDateEnding).join(', ')}`); return;
+      const avail = qe2.slice(0,8).map(e => e.fiscalYear&&e.period ? `${e.fiscalYear} ${e.period}` : e.fiscalDateEnding).join(', ');
+      el.innerHTML = errBox(`Quarter not found. Available: ${avail}`); return;
     }
     _cmpData = {sym,q1,y1,q2,y2,e1,e2,i1,i2};
 
