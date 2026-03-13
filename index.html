@@ -1585,17 +1585,43 @@ async function loadCompare(){
     const qe2=qe_, qi2=qi_;
 
     // FMP returns fiscalYear + period (Q1/Q2/Q3/Q4) — match by that first, fallback to date month
+    // Also handles non-standard fiscal calendars (e.g. ADBE ends in Feb/May/Aug/Nov)
     const findQ=(arr,yr,q)=>{
-      const byPeriod = arr.find(e => e.fiscalYear===yr && e.period===q);
+      // 1) Exact match by fiscalYear + period string
+      const byPeriod = arr.find(e => String(e.fiscalYear)===String(yr) && e.period===q);
       if(byPeriod) return byPeriod;
+
+      // 2) Match by calendar month (standard fiscal year)
       const m = qm[q];
-      return arr.find(e => e.fiscalDateEnding?.startsWith(yr+'-'+m));
+      const byExactMonth = arr.find(e => e.fiscalDateEnding?.startsWith(yr+'-'+m));
+      if(byExactMonth) return byExactMonth;
+
+      // 3) Fuzzy match: same year, month within ±1 of expected
+      const targetMonth = parseInt(m, 10);
+      return arr.find(e => {
+        if(!e.fiscalDateEnding) return false;
+        const [eYear, eMonth] = e.fiscalDateEnding.split('-').map(Number);
+        if(String(eYear) !== String(yr)) return false;
+        const diff = Math.abs(eMonth - targetMonth);
+        return diff <= 1;
+      });
     };
     const e1=findQ(qe2,y1,q1), e2=findQ(qe2,y2,q2);
     const i1=findQ(qi2,y1,q1), i2=findQ(qi2,y2,q2);
 
     if(!e1||!e2){
-      const avail = qe2.slice(0,8).map(e => e.fiscalYear&&e.period ? `${e.fiscalYear} ${e.period}` : e.fiscalDateEnding).join(', ');
+      const avail = qe2.slice(0,8).map(e => {
+        if(e.fiscalYear && e.period) return `${e.fiscalYear} ${e.period}`;
+        if(e.fiscalDateEnding) {
+          const [yr,mo] = e.fiscalDateEnding.split('-');
+          const moN = parseInt(mo,10);
+          // Map month to standard quarter label
+          const qLabel = moN<=3?'Q1':moN<=6?'Q2':moN<=9?'Q3':'Q4';
+          // Adjust year for non-standard fiscal calendars (month<3 might be prior fiscal year end)
+          return `${yr} ${qLabel} (${e.fiscalDateEnding})`;
+        }
+        return '?';
+      }).join(', ');
       el.innerHTML = errBox(`Quarter not found. Available: ${avail}`); return;
     }
     _cmpData = {sym,q1,y1,q2,y2,e1,e2,i1,i2};
