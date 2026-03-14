@@ -1242,6 +1242,7 @@ async function fmpGetOverview(sym){
 }
 
 async function fmpGetExtras(sym){
+  if(!getFmpKey()) return {};
   const [quoteRaw, cfRaw, ptRaw, gradesRaw] = await Promise.allSettled([
     fmpFetch('quote', {symbol: sym}),
     fmpFetch('cash-flow-statement', {symbol: sym, limit: 2}),
@@ -1288,30 +1289,39 @@ async function smartFetchOverview(sym){
   const fmpKey = getFmpKey();
   if(!avKey && !fmpKey) throw new Error('NO_KEY');
 
+  let dOv=null, dInc=null, dBal=null, extras={}, source='';
+
+  // ── AV path ──
   if(avKey && !isAvLimited()){
     try{
-      const dOv = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym}&apikey=${avKey}`);
-      if(!dOv.Symbol) throw new Error('NO_DATA');
+      const _dOv = await safeFetch(`${BASE}?function=OVERVIEW&symbol=${sym}&apikey=${avKey}`);
+      if(!_dOv.Symbol) throw new Error('NO_DATA');
       await delay(1200);
-      const dInc = await safeFetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${avKey}`);
+      const _dInc = await safeFetch(`${BASE}?function=INCOME_STATEMENT&symbol=${sym}&apikey=${avKey}`);
       await delay(1200);
-      const dBal = await safeFetch(`${BASE}?function=BALANCE_SHEET&symbol=${sym}&apikey=${avKey}`);
-      return {dOv, dInc, dBal, source:'AV'};
+      const _dBal = await safeFetch(`${BASE}?function=BALANCE_SHEET&symbol=${sym}&apikey=${avKey}`);
+      dOv=_dOv; dInc=_dInc; dBal=_dBal; source='AV';
     } catch(e){
-      if(e.message === 'DAILY_LIMIT' && fmpKey){
-        // fallthrough to FMP
-      } else {
-        throw e;
-      }
+      if(e.message === 'DAILY_LIMIT'){ markAvLimited(); }
+      else if(e.message !== 'NO_DATA') throw e;
     }
   }
 
+  // ── FMP path — fills missing data or replaces AV ──
   if(fmpKey){
-    const result = await fmpGetOverview(sym);
-    const extras = await fmpGetExtras(sym);
-    return {...result, extras, source:'FMP'};
+    if(!dOv){
+      // No AV data — get everything from FMP
+      const fmpResult = await fmpGetOverview(sym);
+      dOv=fmpResult.dOv; dInc=fmpResult.dInc; dBal=fmpResult.dBal;
+      source = source ? 'AV+FMP' : 'FMP';
+    }
+    // Always fetch extras from FMP (quote, cash flow, analyst)
+    extras = await fmpGetExtras(sym).catch(()=>({}));
+    if(source==='AV') source='AV+FMP';
   }
-  throw new Error('DAILY_LIMIT');
+
+  if(!dOv) throw new Error('NO_DATA');
+  return {dOv, dInc, dBal, extras, source};
 }
 
 function valChip(pe){
@@ -1617,7 +1627,7 @@ function renderOverview(sym, showCacheBanner=true, freshData=null, dataSource=nu
   ];
 
   el.innerHTML = cacheBanner+`
-    <div class="ov-header"><div class="ticker">${dOv.Symbol}</div><div><div class="company-name-txt">${dOv.Name||''}</div><div class="company-sector">${dOv.Sector||''} · ${dOv.Exchange||''}</div></div>${(dataSource||dOv._source)==='FMP'?'<div style="font-size:.55rem;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);border-radius:6px;padding:3px 9px;color:var(--accent)">via FMP</div>':''}</div>
+    <div class="ov-header"><div class="ticker">${dOv.Symbol}</div><div><div class="company-name-txt">${dOv.Name||''}</div><div class="company-sector">${dOv.Sector||''} · ${dOv.Exchange||''}</div></div>${(()=>{const s=dataSource||dOv._source;return s&&s!=='AV'?`<div style="font-size:.55rem;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);border-radius:6px;padding:3px 9px;color:var(--accent)">via ${s}</div>`:''})()}</div>
     ${priceHtml}
     <div class="sec-label">Health Score ${tipHtml('Health Score')}</div>${renderHealth(dOv)}
     ${analystHtml ? `<div class="sec-label">Analyst Ratings & Price Target</div>${analystHtml}` : ''}
