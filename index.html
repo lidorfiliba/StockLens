@@ -274,6 +274,29 @@ footer b{color:var(--accent);font-weight:500;}
 .lock-tg a{color:var(--blue);text-decoration:none;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
+/* ── PRICE BAND ── */
+.price-band{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:10px 0 14px;}
+.price-main{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;}
+.price-val{font-size:1.6rem;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;}
+.price-chg{font-size:.8rem;font-weight:600;}
+.price-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:.65rem;color:var(--muted);}
+.price-meta span{background:var(--bg);padding:2px 8px;border-radius:6px;}
+/* ── ANALYST ── */
+.analyst-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+.analyst-consensus{font-size:1.1rem;font-weight:800;margin-bottom:10px;letter-spacing:.03em;}
+.analyst-consensus.green{color:var(--up);}
+.analyst-consensus.gold{color:var(--gold);}
+.analyst-consensus.red{color:var(--down);}
+.analyst-bar-wrap{display:flex;height:10px;border-radius:6px;overflow:hidden;margin-bottom:8px;}
+.analyst-bar-seg{height:100%;transition:width .4s;}
+.analyst-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:.62rem;margin-bottom:12px;}
+.analyst-targets{display:flex;gap:8px;flex-wrap:wrap;}
+.analyst-target-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;flex:1;min-width:60px;}
+.at-label{display:block;font-size:.58rem;color:var(--muted);margin-bottom:3px;}
+.at-val{font-size:.85rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.at-val.green{color:var(--up);}
+.at-val.gold{color:var(--gold);}
+.at-val.red{color:var(--down);}
 /* ── GUIDE ── */
 .guide-wrap{padding:4px 0 24px;}
 .guide-intro{text-align:center;padding:20px 0 24px;border-bottom:1px solid var(--border);}
@@ -304,60 +327,6 @@ footer b{color:var(--accent);font-weight:500;}
 .guide-check-num{min-width:24px;height:24px;background:var(--accent);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;flex-shrink:0;}
 .guide-check-item b{color:var(--text);}
 .guide-footer{text-align:center;font-size:.6rem;color:var(--muted);padding-top:16px;opacity:.6;}
-
-/* ── COMPARE KEY NOTICE ── */
-.cmp-notice {
-  border-radius: 12px;
-  padding: 18px 22px;
-  font-size: .78rem;
-  line-height: 1.75;
-  animation: fadeUp .35s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.cmp-notice.warn {
-  background: rgba(247,201,72,0.07);
-  border: 1px solid rgba(247,201,72,0.28);
-  color: var(--text2);
-}
-.cmp-notice.ok {
-  background: rgba(0,229,160,0.05);
-  border: 1px solid rgba(0,229,160,0.18);
-  color: var(--text2);
-}
-.cmp-notice-title {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: .9rem;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.cmp-notice.warn .cmp-notice-title { color: var(--gold); }
-.cmp-notice.ok  .cmp-notice-title  { color: var(--up);   }
-.cmp-notice-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-.cmp-notice-icon { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
-.cmp-notice-text b { color: var(--text); }
-.cmp-notice-text a { color: var(--accent); text-decoration: none; }
-.cmp-notice-text a:hover { text-decoration: underline; }
-.cmp-notice-badge {
-  display: inline-block;
-  font-size: .6rem;
-  padding: 3px 9px;
-  border-radius: 100px;
-  letter-spacing: .5px;
-  font-weight: 500;
-  vertical-align: middle;
-  margin-right: 4px;
-}
-.badge-green { background: rgba(0,229,160,0.12); color: var(--up);   border: 1px solid rgba(0,229,160,0.25); }
-.badge-red   { background: rgba(255,95,87,0.10);  color: var(--down); border: 1px solid rgba(255,95,87,0.22);  }
-.badge-gold  { background: rgba(247,201,72,0.10); color: var(--gold); border: 1px solid rgba(247,201,72,0.25); }
 </style>
 </head>
 <body>
@@ -480,7 +449,6 @@ footer b{color:var(--accent);font-weight:500;}
       </div>
       <button class="btn" onclick="loadCompare()">Compare →</button>
     </div>
-    <div id="cmp-key-notice" style="margin-bottom:16px"></div>
     <div id="cmp-result"><div class="empty"><span class="empty-icon">⚡</span>Select two quarters to compare</div></div>
   </div>
   <div class="panel" id="panel-versus">
@@ -1018,85 +986,7 @@ function saveKey(){
   localStorage.removeItem(AV_LIMIT_KEY); // reset limit flag on new key
   document.getElementById('apiKeyInput').value = '';
   showKeyStatus('ok','✓ AV Key saved.');
-  
-/* ── COMPARE PANEL NOTICE ── */
-function renderCompareNotice() {
-  const el = document.getElementById('cmp-key-notice');
-  if (!el) return;
-  const hasAV  = !!getKey();
-  const hasFMP = !!getFmpKey();
-
-  if (hasAV) {
-    // AV key present — full support
-    el.innerHTML = `<div class="cmp-notice ok">
-      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">🔑</span>
-        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  if (hasFMP && !hasAV) {
-    // FMP only — limited
-    el.innerHTML = `<div class="cmp-notice warn">
-      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">❌</span>
-        <span class="cmp-notice-text">
-          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">✅</span>
-        <span class="cmp-notice-text">
-          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
-          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">💎</span>
-        <span class="cmp-notice-text">
-          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
-          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row" style="margin-top:4px">
-        <span class="cmp-notice-icon">⚙️</span>
-        <span class="cmp-notice-text">
-          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
-          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
-        </span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  // No key at all — generic prompt
-  el.innerHTML = `<div class="cmp-notice warn">
-    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">✅</span>
-      <span class="cmp-notice-text">
-        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
-        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
-      </span>
-    </div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">💎</span>
-      <span class="cmp-notice-text">
-        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
-      </span>
-    </div>
-    <div style="margin-top:4px">
-      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
-    </div>
-  </div>`;
-}
-
-updateKeyUI();
-renderCompareNotice();
+  updateKeyUI();
 }
 
 function clearKey(){
@@ -1104,85 +994,7 @@ function clearKey(){
   localStorage.removeItem(AV_LIMIT_KEY);
   document.getElementById('apiKeyInput').value = '';
   showKeyStatus('err','AV Key removed.');
-  
-/* ── COMPARE PANEL NOTICE ── */
-function renderCompareNotice() {
-  const el = document.getElementById('cmp-key-notice');
-  if (!el) return;
-  const hasAV  = !!getKey();
-  const hasFMP = !!getFmpKey();
-
-  if (hasAV) {
-    // AV key present — full support
-    el.innerHTML = `<div class="cmp-notice ok">
-      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">🔑</span>
-        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  if (hasFMP && !hasAV) {
-    // FMP only — limited
-    el.innerHTML = `<div class="cmp-notice warn">
-      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">❌</span>
-        <span class="cmp-notice-text">
-          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">✅</span>
-        <span class="cmp-notice-text">
-          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
-          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">💎</span>
-        <span class="cmp-notice-text">
-          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
-          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row" style="margin-top:4px">
-        <span class="cmp-notice-icon">⚙️</span>
-        <span class="cmp-notice-text">
-          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
-          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
-        </span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  // No key at all — generic prompt
-  el.innerHTML = `<div class="cmp-notice warn">
-    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">✅</span>
-      <span class="cmp-notice-text">
-        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
-        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
-      </span>
-    </div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">💎</span>
-      <span class="cmp-notice-text">
-        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
-      </span>
-    </div>
-    <div style="margin-top:4px">
-      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
-    </div>
-  </div>`;
-}
-
-updateKeyUI();
-renderCompareNotice();
+  updateKeyUI();
 }
 
 function saveFmpKey(){
@@ -1191,175 +1003,18 @@ function saveFmpKey(){
   localStorage.setItem(FMP_STORE, val);
   document.getElementById('fmpKeyInput').value = '';
   showFmpKeyStatus('ok','✓ FMP Key saved.');
-  
-/* ── COMPARE PANEL NOTICE ── */
-function renderCompareNotice() {
-  const el = document.getElementById('cmp-key-notice');
-  if (!el) return;
-  const hasAV  = !!getKey();
-  const hasFMP = !!getFmpKey();
-
-  if (hasAV) {
-    // AV key present — full support
-    el.innerHTML = `<div class="cmp-notice ok">
-      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">🔑</span>
-        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  if (hasFMP && !hasAV) {
-    // FMP only — limited
-    el.innerHTML = `<div class="cmp-notice warn">
-      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">❌</span>
-        <span class="cmp-notice-text">
-          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">✅</span>
-        <span class="cmp-notice-text">
-          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
-          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">💎</span>
-        <span class="cmp-notice-text">
-          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
-          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row" style="margin-top:4px">
-        <span class="cmp-notice-icon">⚙️</span>
-        <span class="cmp-notice-text">
-          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
-          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
-        </span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  // No key at all — generic prompt
-  el.innerHTML = `<div class="cmp-notice warn">
-    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">✅</span>
-      <span class="cmp-notice-text">
-        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
-        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
-      </span>
-    </div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">💎</span>
-      <span class="cmp-notice-text">
-        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
-      </span>
-    </div>
-    <div style="margin-top:4px">
-      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
-    </div>
-  </div>`;
-}
-
-updateKeyUI();
-renderCompareNotice();
+  updateKeyUI();
 }
 
 function clearFmpKey(){
   localStorage.removeItem(FMP_STORE);
   document.getElementById('fmpKeyInput').value = '';
   showFmpKeyStatus('err','FMP Key removed.');
-  
-/* ── COMPARE PANEL NOTICE ── */
-function renderCompareNotice() {
-  const el = document.getElementById('cmp-key-notice');
-  if (!el) return;
-  const hasAV  = !!getKey();
-  const hasFMP = !!getFmpKey();
-
-  if (hasAV) {
-    // AV key present — full support
-    el.innerHTML = `<div class="cmp-notice ok">
-      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">🔑</span>
-        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  if (hasFMP && !hasAV) {
-    // FMP only — limited
-    el.innerHTML = `<div class="cmp-notice warn">
-      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">❌</span>
-        <span class="cmp-notice-text">
-          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">✅</span>
-        <span class="cmp-notice-text">
-          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
-          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">💎</span>
-        <span class="cmp-notice-text">
-          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
-          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row" style="margin-top:4px">
-        <span class="cmp-notice-icon">⚙️</span>
-        <span class="cmp-notice-text">
-          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
-          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
-        </span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  // No key at all — generic prompt
-  el.innerHTML = `<div class="cmp-notice warn">
-    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">✅</span>
-      <span class="cmp-notice-text">
-        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
-        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
-      </span>
-    </div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">💎</span>
-      <span class="cmp-notice-text">
-        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
-      </span>
-    </div>
-    <div style="margin-top:4px">
-      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
-    </div>
-  </div>`;
-}
-
-updateKeyUI();
-renderCompareNotice();
+  updateKeyUI();
 }
 
 function clearCache(){
   localStorage.removeItem(CACHE_STORE);
-  localStorage.removeItem(CMP_CACHE_STORE);
   closeSettings();
   setTimeout(()=>{ alert('Cache cleared!'); location.reload(); }, 200);
 }
@@ -1383,7 +1038,6 @@ function updateKeyUI(){
   // Show AV limit warning if active
   const limitWarn = document.getElementById('avLimitWarn');
   if(limitWarn) limitWarn.style.display = isAvLimited() && getFmpKey() ? 'flex' : 'none';
-  renderCompareNotice();
 }
 
 function openSettings(){ document.getElementById('settingsOverlay').classList.add('open'); }
@@ -1394,85 +1048,7 @@ function toggleTheme(){
   h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark');
 }
 
-
-/* ── COMPARE PANEL NOTICE ── */
-function renderCompareNotice() {
-  const el = document.getElementById('cmp-key-notice');
-  if (!el) return;
-  const hasAV  = !!getKey();
-  const hasFMP = !!getFmpKey();
-
-  if (hasAV) {
-    // AV key present — full support
-    el.innerHTML = `<div class="cmp-notice ok">
-      <div class="cmp-notice-title">✅ Quarter Compare מוכן לשימוש</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">🔑</span>
-        <span class="cmp-notice-text">מזוהה <b>Alpha Vantage key</b> — נתונים רבעוניים מלאים זמינים (EPS, הכנסות, רווח תפעולי ועוד).</span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  if (hasFMP && !hasAV) {
-    // FMP only — limited
-    el.innerHTML = `<div class="cmp-notice warn">
-      <div class="cmp-notice-title">⚠️ Quarter Compare — מפתח FMP חינמי לא מספיק</div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">❌</span>
-        <span class="cmp-notice-text">
-          <b>FMP Free</b> לא כולל גישה לנתונים רבעוניים — ה-API מחזיר שגיאת Premium עבור endpoint זה.
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">✅</span>
-        <span class="cmp-notice-text">
-          <b>האפשרות החינמית היחידה:</b> מפתח <b>Alpha Vantage</b> — חינמי לחלוטין, כולל נתוני EPS ורבעונים מלאים.
-          <br>הרשמה ב-30 שניות: <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row">
-        <span class="cmp-notice-icon">💎</span>
-        <span class="cmp-notice-text">
-          לחלופין, שדרג ל-<b>FMP Premium</b> לגישה מלאה:
-          <a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank">financialmodelingprep.com/pricing →</a>
-        </span>
-      </div>
-      <div class="cmp-notice-row" style="margin-top:4px">
-        <span class="cmp-notice-icon">⚙️</span>
-        <span class="cmp-notice-text">
-          לאחר ההרשמה, הכנס את מפתח ה-AV בלחיצה על
-          <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:5px;font-family:inherit;font-size:.7rem;padding:2px 10px;cursor:pointer;font-weight:500">Settings</button>
-        </span>
-      </div>
-    </div>`;
-    return;
-  }
-
-  // No key at all — generic prompt
-  el.innerHTML = `<div class="cmp-notice warn">
-    <div class="cmp-notice-title">🔒 נדרש מפתח API</div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">✅</span>
-      <span class="cmp-notice-text">
-        <b>Alpha Vantage (מומלץ, חינמי):</b> כולל נתוני רבעון מלאים.
-        <br><a href="https://www.alphavantage.co/support/#api-key" target="_blank">קבל מפתח חינמי →</a>
-      </span>
-    </div>
-    <div class="cmp-notice-row">
-      <span class="cmp-notice-icon">💎</span>
-      <span class="cmp-notice-text">
-        <b>FMP Premium:</b> תומך גם כן, אך ה-Free tier לא מספיק.
-      </span>
-    </div>
-    <div style="margin-top:4px">
-      <button onclick="openSettings()" style="background:var(--accent);color:#000;border:none;border-radius:7px;font-family:inherit;font-size:.72rem;padding:7px 18px;cursor:pointer;font-weight:600;letter-spacing:.5px">⚙ פתח Settings →</button>
-    </div>
-  </div>`;
-}
-
 updateKeyUI();
-renderCompareNotice();
 
 /* ── LOCK SCREEN ── */
 const GIST_ID = '18407cae7b0a4a4c2f1313ab835dceb4';
@@ -1576,18 +1152,9 @@ async function fmpFetch(endpoint, params={}){
   if(!key) throw new Error('NO_FMP_KEY');
   const q = new URLSearchParams({...params, apikey: key});
   const r = await fetch(`${FMP_BASE}/${endpoint}?${q}`);
-  const text = await r.text();
-  let d;
-  try { d = JSON.parse(text); }
-  catch(e) {
-    if(text.toLowerCase().includes('premium') || text.toLowerCase().includes('upgrade'))
-      throw new Error('FMP_PREMIUM');
-    if(text.toLowerCase().includes('invalid') || text.toLowerCase().includes('unauthorized'))
-      throw new Error('FMP_INVALID_KEY');
-    throw new Error('FMP_ERROR');
-  }
+  const d = await r.json();
   if(d && d['Error Message']) throw new Error('FMP_ERROR');
-  if(d && d.message && (d.message.includes('limit') || d.message.includes('premium'))) throw new Error('FMP_PREMIUM');
+  if(d && d.message && d.message.includes('limit')) throw new Error('FMP_LIMIT');
   if(Array.isArray(d) && d.length === 0) throw new Error('NO_DATA');
   return d;
 }
@@ -1674,6 +1241,22 @@ async function fmpGetOverview(sym){
   return {dOv, dInc, dBal};
 }
 
+async function fmpGetExtras(sym){
+  const [quoteRaw, cfRaw, ptRaw, gradesRaw] = await Promise.allSettled([
+    fmpFetch('quote', {symbol: sym}),
+    fmpFetch('cash-flow-statement', {symbol: sym, limit: 2}),
+    fmpFetch('price-target-consensus', {symbol: sym}),
+    fmpFetch('grades-consensus', {symbol: sym}),
+  ]);
+  const quote  = (quoteRaw.status==='fulfilled'  && Array.isArray(quoteRaw.value)  ? quoteRaw.value[0]  : quoteRaw.value)  || {};
+  const cfArr  = (cfRaw.status==='fulfilled'     && Array.isArray(cfRaw.value)     ? cfRaw.value        : [])              || [];
+  const cf     = cfArr[0] || {};
+  const cf2    = cfArr[1] || {};
+  const pt     = (ptRaw.status==='fulfilled'     && Array.isArray(ptRaw.value)     ? ptRaw.value[0]     : ptRaw.value)     || {};
+  const grades = (gradesRaw.status==='fulfilled' && Array.isArray(gradesRaw.value) ? gradesRaw.value[0] : gradesRaw.value) || {};
+  return {quote, cf, cf2, pt, grades};
+}
+
 async function fmpGetQuarterlyIncome(sym){
   // FMP stable uses separate endpoint for quarterly data
   const data = await fmpFetch('income-statement', {symbol: sym, period: 'quarter', limit: 12});
@@ -1725,7 +1308,8 @@ async function smartFetchOverview(sym){
 
   if(fmpKey){
     const result = await fmpGetOverview(sym);
-    return {...result, source:'FMP'};
+    const extras = await fmpGetExtras(sym);
+    return {...result, extras, source:'FMP'};
   }
   throw new Error('DAILY_LIMIT');
 }
@@ -1790,11 +1374,6 @@ const CACHE_STORE='sl_cache_ov';
 function saveCache(sym,data){try{const c=JSON.parse(localStorage.getItem(CACHE_STORE)||'{}');c[sym]={data,ts:Date.now()};const k=Object.keys(c);if(k.length>10)delete c[k[0]];localStorage.setItem(CACHE_STORE,JSON.stringify(c));}catch(e){}}
 function getCache(sym){try{const c=JSON.parse(localStorage.getItem(CACHE_STORE)||'{}');return c[sym]||null;}catch(e){return null;}}
 function fmtAge(ts){const m=Math.floor((Date.now()-ts)/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
-
-/* ── COMPARE CACHE ── */
-const CMP_CACHE_STORE='sl_cache_cmp';
-function saveCmpCache(sym,data){try{const c=JSON.parse(localStorage.getItem(CMP_CACHE_STORE)||'{}');c[sym]={data,ts:Date.now()};const k=Object.keys(c);if(k.length>8)delete c[k[0]];localStorage.setItem(CMP_CACHE_STORE,JSON.stringify(c));}catch(e){}}
-function getCmpCache(sym){try{const c=JSON.parse(localStorage.getItem(CMP_CACHE_STORE)||'{}');return c[sym]||null;}catch(e){return null;}}
 
 /* ── TOOLTIPS ── */
 const TIPS={
@@ -1904,10 +1483,10 @@ async function loadOverview(forceRefresh=false){
   }
   try{
     el.innerHTML = loading('Loading overview…');
-    const {dOv, dInc, dBal, source: dataSource} = await smartFetchOverview(sym);
+    const {dOv, dInc, dBal, extras, source: dataSource} = await smartFetchOverview(sym);
     if(!dOv.Symbol){ el.innerHTML = errBox('No data found. Check symbol or API key.'); return; }
-    saveCache(sym, {dOv,dInc,dBal});
-    renderOverview(sym, false, {dOv,dInc,dBal}, dataSource);
+    saveCache(sym, {dOv,dInc,dBal,extras});
+    renderOverview(sym, false, {dOv,dInc,dBal,extras}, dataSource);
   } catch(e){
     el.innerHTML = e.message==='DAILY_LIMIT'
       ? errBox('AV daily limit reached (25 req/day). Add an FMP key in Settings for 250 more requests/day.')
@@ -1923,8 +1502,9 @@ function renderOverview(sym, showCacheBanner=true, freshData=null, dataSource=nu
   const el = document.getElementById('ov-result');
   const source = freshData || getCache(sym)?.data;
   if(!source) return;
-  const {dOv, dInc, dBal} = source;
-  _ovData = {dOv, dInc, dBal, sym};
+  const {dOv, dInc, dBal, extras} = source;
+  const ex = extras || {};
+  _ovData = {dOv, dInc, dBal, extras, sym};
   const li=dInc?.annualReports?.[0]||{}, lb=dBal?.annualReports?.[0]||{};
   const fundamentals=[
     {label:'P/E Ratio',val:isNaN(parseFloat(dOv.PERatio))?dOv.PERatio:(parseFloat(dOv.PERatio)).toFixed(2),extra:valChip(dOv.PERatio)},
@@ -1966,10 +1546,83 @@ function renderOverview(sym, showCacheBanner=true, freshData=null, dataSource=nu
   ];
   const cards=arr=>arr.map((m,i)=>`<div class="card" style="animation-delay:${i*0.04}s"><div class="card-label">${m.label}${tipHtml(m.label)}</div><div class="card-value ${m.cls||''}">${m.val||'—'}</div>${m.extra||''}</div>`).join('');
   const cacheBanner = showCacheBanner&&getCache(sym) ? `<div class="cache-banner"><span>💾 From cache · saved ${fmtAge(getCache(sym).ts)}</span><div class="cache-actions"><button class="cache-refresh-btn" onclick="loadOverview(true)">🔄 Refresh API</button></div></div>` : '';
+
+  // ── PRICE SECTION ──
+  const q = ex.quote || {};
+  const priceHtml = q.price ? (()=>{
+    const chg = q.change || 0, chgPct = q.changePercentage || 0;
+    const cls = chg >= 0 ? 'green' : 'red';
+    const arrow = chg >= 0 ? '▲' : '▼';
+    const upside = q.price && ex.pt?.targetConsensus ? (((ex.pt.targetConsensus - q.price) / q.price)*100).toFixed(1) : null;
+    const upsideCls = upside > 0 ? 'green' : 'red';
+    return `<div class="price-band">
+      <div class="price-main">
+        <span class="price-val">$${q.price.toFixed(2)}</span>
+        <span class="price-chg ${cls}">${arrow} ${Math.abs(chg).toFixed(2)} (${Math.abs(chgPct).toFixed(2)}%)</span>
+      </div>
+      <div class="price-meta">
+        <span>52W: $${q.yearLow} – $${q.yearHigh}</span>
+        <span>MA50: $${q.priceAvg50?.toFixed(2)||'—'}</span>
+        <span>MA200: $${q.priceAvg200?.toFixed(2)||'—'}</span>
+        ${upside ? `<span class="${upsideCls}" style="font-weight:700">Upside: ${upside > 0 ? '+' : ''}${upside}%</span>` : ''}
+      </div>
+    </div>`;
+  })() : '';
+
+  // ── ANALYST SECTION ──
+  const pt = ex.pt || {}, grades = ex.grades || {};
+  const analystHtml = (pt.targetConsensus || grades.consensus) ? (()=>{
+    const total = (grades.strongBuy||0)+(grades.buy||0)+(grades.hold||0)+(grades.sell||0)+(grades.strongSell||0);
+    const consCls = grades.consensus==='Strong Buy'||grades.consensus==='Buy' ? 'green' : grades.consensus==='Hold' ? 'gold' : 'red';
+    const barHtml = total ? `
+      <div class="analyst-bar-wrap">
+        ${grades.strongBuy ? `<div class="analyst-bar-seg" style="width:${(grades.strongBuy/total*100).toFixed(1)}%;background:var(--up)" title="Strong Buy: ${grades.strongBuy}"></div>` : ''}
+        ${grades.buy ? `<div class="analyst-bar-seg" style="width:${(grades.buy/total*100).toFixed(1)}%;background:rgba(0,229,160,0.5)" title="Buy: ${grades.buy}"></div>` : ''}
+        ${grades.hold ? `<div class="analyst-bar-seg" style="width:${(grades.hold/total*100).toFixed(1)}%;background:var(--gold)" title="Hold: ${grades.hold}"></div>` : ''}
+        ${grades.sell ? `<div class="analyst-bar-seg" style="width:${(grades.sell/total*100).toFixed(1)}%;background:rgba(255,95,87,0.5)" title="Sell: ${grades.sell}"></div>` : ''}
+        ${grades.strongSell ? `<div class="analyst-bar-seg" style="width:${(grades.strongSell/total*100).toFixed(1)}%;background:var(--down)" title="Strong Sell: ${grades.strongSell}"></div>` : ''}
+      </div>
+      <div class="analyst-legend">
+        ${grades.strongBuy ? `<span style="color:var(--up)">Strong Buy ${grades.strongBuy}</span>` : ''}
+        ${grades.buy ? `<span style="color:var(--up)">Buy ${grades.buy}</span>` : ''}
+        ${grades.hold ? `<span style="color:var(--gold)">Hold ${grades.hold}</span>` : ''}
+        ${grades.sell ? `<span style="color:var(--down)">Sell ${grades.sell}</span>` : ''}
+        ${grades.strongSell ? `<span style="color:var(--down)">Strong Sell ${grades.strongSell}</span>` : ''}
+      </div>` : '';
+    return `<div class="analyst-wrap">
+      ${grades.consensus ? `<div class="analyst-consensus ${consCls}">${grades.consensus}</div>` : ''}
+      ${barHtml}
+      <div class="analyst-targets">
+        ${pt.targetLow ? `<div class="analyst-target-item"><span class="at-label">Low</span><span class="at-val red">$${pt.targetLow}</span></div>` : ''}
+        ${pt.targetConsensus ? `<div class="analyst-target-item"><span class="at-label">Consensus</span><span class="at-val green">$${pt.targetConsensus.toFixed(2)}</span></div>` : ''}
+        ${pt.targetMedian ? `<div class="analyst-target-item"><span class="at-label">Median</span><span class="at-val gold">$${pt.targetMedian}</span></div>` : ''}
+        ${pt.targetHigh ? `<div class="analyst-target-item"><span class="at-label">High</span><span class="at-val green">$${pt.targetHigh}</span></div>` : ''}
+      </div>
+    </div>`;
+  })() : '';
+
+  // ── CASH FLOW SECTION ──
+  const cf = ex.cf || {}, cf2 = ex.cf2 || {};
+  const fcfGrowth = cf.freeCashFlow && cf2.freeCashFlow && cf2.freeCashFlow !== 0
+    ? (((cf.freeCashFlow - cf2.freeCashFlow) / Math.abs(cf2.freeCashFlow))*100).toFixed(1) : null;
+  const revGrowth = li.totalRevenue && dInc?.annualReports?.[1]?.totalRevenue
+    ? (((li.totalRevenue - dInc.annualReports[1].totalRevenue) / Math.abs(dInc.annualReports[1].totalRevenue))*100).toFixed(1) : null;
+  const cashFlowM = [
+    {label:'Operating Cash Flow', val:fmt(cf.operatingCashFlow||cf.netCashProvidedByOperatingActivities), cls:'green'},
+    {label:'Free Cash Flow',      val:fmt(cf.freeCashFlow), cls:'green',
+     extra: fcfGrowth ? `<div class="val-chip ${parseFloat(fcfGrowth)>=0?'chip-green':'chip-red'}">${parseFloat(fcfGrowth)>=0?'+':''}${fcfGrowth}% YoY</div>` : ''},
+    {label:'CapEx',               val:fmt(cf.capitalExpenditure), cls:'red'},
+    {label:'Revenue Growth YoY',  val:revGrowth ? (parseFloat(revGrowth)>=0?'+':'')+revGrowth+'%' : '—',
+     cls: revGrowth ? (parseFloat(revGrowth)>=0?'green':'red') : ''},
+  ];
+
   el.innerHTML = cacheBanner+`
     <div class="ov-header"><div class="ticker">${dOv.Symbol}</div><div><div class="company-name-txt">${dOv.Name||''}</div><div class="company-sector">${dOv.Sector||''} · ${dOv.Exchange||''}</div></div>${(dataSource||dOv._source)==='FMP'?'<div style="font-size:.55rem;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);border-radius:6px;padding:3px 9px;color:var(--accent)">via FMP</div>':''}</div>
+    ${priceHtml}
     <div class="sec-label">Health Score ${tipHtml('Health Score')}</div>${renderHealth(dOv)}
+    ${analystHtml ? `<div class="sec-label">Analyst Ratings & Price Target</div>${analystHtml}` : ''}
     <div class="sec-label">Valuation & Fundamentals</div><div class="metrics-grid">${cards(fundamentals)}</div>
+    <div class="sec-label">Cash Flow</div><div class="metrics-grid">${cards(cashFlowM)}</div>
     <div class="sec-label">Income Statement <span style="font-size:.55rem;opacity:.5">${li.fiscalDateEnding||''}</span></div><div class="metrics-grid">${cards(incomeM)}</div>
     <div class="sec-label">Balance Sheet</div><div class="metrics-grid">${cards(balM)}</div>
     <div class="sec-label">Dividends</div><div class="metrics-grid">${cards(divs)}</div>
@@ -1997,7 +1650,7 @@ function exportOverview(){
 }
 
 /* ── COMPARE ── */
-async function loadCompare(forceRefresh=false){
+async function loadCompare(){
   const sym = document.getElementById('cmp-sym').value.trim().toUpperCase();
   const q1=document.getElementById('cq1').value, y1=document.getElementById('cy1').value;
   const q2=document.getElementById('cq2').value, y2=document.getElementById('cy2').value;
@@ -2005,21 +1658,6 @@ async function loadCompare(forceRefresh=false){
   if(!getKey() && !getFmpKey()){ openSettings(); return; }
   const el = document.getElementById('cmp-result');
   const qm = {Q1:'03',Q2:'06',Q3:'09',Q4:'12'};
-
-  // ── Cache check ──
-  if(!forceRefresh){
-    const cached = getCmpCache(sym);
-    if(cached){
-      el.innerHTML = `<div class="cache-banner">
-        <span>💾 Cached data for <b>${sym}</b> · saved ${fmtAge(cached.ts)}</span>
-        <div class="cache-actions">
-          <button class="cache-use-btn" onclick="renderCmpFromCache('${sym}','${q1}','${y1}','${q2}','${y2}')">Use Cached</button>
-          <button class="cache-refresh-btn" onclick="loadCompare(true)">🔄 Refresh API</button>
-        </div></div>`;
-      return;
-    }
-  }
-
   try{
     const avKey = getKey(), fmpKey = getFmpKey();
     let qe, qi;
@@ -2043,81 +1681,35 @@ async function loadCompare(forceRefresh=false){
 
     if(!qe && fmpKey){
       el.innerHTML = loading('Loading via FMP…');
-      try {
-        const fmpInc = await fmpGetQuarterlyIncome(sym);
-        qi = fmpInc.quarterlyReports;
-        qe = qi.map(q => ({
-          fiscalDateEnding: q.fiscalDateEnding,
-          fiscalYear: q.fiscalYear,
-          period: q.period,
-          reportedEPS: q.reportedEPS || q.eps || '—',
-          estimatedEPS: '—',
-          surprise: '—',
-          surprisePercentage: '—',
-        }));
-      } catch(fmpErr) {
-        if(fmpErr.message === 'FMP_PREMIUM') {
-          const avNote = avKey
-            ? '<br><br>⚡ יש לך מפתח AV — ייתכן שהגעת ל-25 הבקשות היומיות. נסה שוב מחר.'
-            : '<br><br>💡 <b>פתרון:</b> הוסף מפתח <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color:var(--accent)">Alpha Vantage (חינמי)</a> בהגדרות — הוא תומך בנתונים רבעוניים ללא תשלום.';
-          el.innerHTML = `<div class="err-box">
-            ⚠ הנתונים הרבעוניים של FMP דורשים תוכנית Premium.<br>
-            המפתח החינמי של FMP מוגבל לנתונים שנתיים בלבד.
-            ${avNote}
-            <br><br><span style="font-size:.65rem;opacity:.7">לחלופין, שדרג ב־<a href="https://financialmodelingprep.com/developer/docs/pricing" target="_blank" style="color:var(--accent)">financialmodelingprep.com</a></span>
-          </div>`;
-          return;
-        }
-        throw fmpErr;
-      }
+      const fmpInc = await fmpGetQuarterlyIncome(sym);
+      qi = fmpInc.quarterlyReports;
+      qe = qi.map(q => ({
+        fiscalDateEnding: q.fiscalDateEnding,
+        fiscalYear: q.fiscalYear,
+        period: q.period,
+        reportedEPS: q.reportedEPS || q.eps || '—',
+        estimatedEPS: '—',
+        surprise: '—',
+        surprisePercentage: '—',
+      }));
     }
 
     if(!qe){ el.innerHTML = errBox('No earnings data. Check symbol/key.'); return; }
-
-    // ── Save to cache ──
-    saveCmpCache(sym, {qe, qi});
-
     const qe_=qe, qi_=qi;
     const qe2=qe_, qi2=qi_;
 
     // FMP returns fiscalYear + period (Q1/Q2/Q3/Q4) — match by that first, fallback to date month
-    // Also handles non-standard fiscal calendars (e.g. ADBE ends in Feb/May/Aug/Nov)
     const findQ=(arr,yr,q)=>{
-      // 1) Exact match by fiscalYear + period string
-      const byPeriod = arr.find(e => String(e.fiscalYear)===String(yr) && e.period===q);
+      const byPeriod = arr.find(e => e.fiscalYear===yr && e.period===q);
       if(byPeriod) return byPeriod;
-
-      // 2) Match by calendar month (standard fiscal year)
       const m = qm[q];
-      const byExactMonth = arr.find(e => e.fiscalDateEnding?.startsWith(yr+'-'+m));
-      if(byExactMonth) return byExactMonth;
-
-      // 3) Fuzzy match: same year, month within ±1 of expected
-      const targetMonth = parseInt(m, 10);
-      return arr.find(e => {
-        if(!e.fiscalDateEnding) return false;
-        const [eYear, eMonth] = e.fiscalDateEnding.split('-').map(Number);
-        if(String(eYear) !== String(yr)) return false;
-        const diff = Math.abs(eMonth - targetMonth);
-        return diff <= 1;
-      });
+      return arr.find(e => e.fiscalDateEnding?.startsWith(yr+'-'+m));
     };
     const e1=findQ(qe2,y1,q1), e2=findQ(qe2,y2,q2);
     const i1=findQ(qi2,y1,q1), i2=findQ(qi2,y2,q2);
 
     if(!e1||!e2){
-      const avail = qe2.slice(0,8).map(e => {
-        if(e.fiscalYear && e.period) return `${e.fiscalYear} ${e.period}`;
-        if(e.fiscalDateEnding) {
-          const [yr,mo] = e.fiscalDateEnding.split('-');
-          const moN = parseInt(mo,10);
-          // Map month to standard quarter label
-          const qLabel = moN<=3?'Q1':moN<=6?'Q2':moN<=9?'Q3':'Q4';
-          // Adjust year for non-standard fiscal calendars (month<3 might be prior fiscal year end)
-          return `${yr} ${qLabel} (${e.fiscalDateEnding})`;
-        }
-        return '?';
-      }).join(', ');
+      const avail = qe2.slice(0,8).map(e => e.fiscalYear&&e.period ? `${e.fiscalYear} ${e.period}` : e.fiscalDateEnding).join(', ');
       el.innerHTML = errBox(`Quarter not found. Available: ${avail}`); return;
     }
     _cmpData = {sym,q1,y1,q2,y2,e1,e2,i1,i2};
@@ -2146,101 +1738,27 @@ async function loadCompare(forceRefresh=false){
       }).join('');
     }
 
-    renderCmpResult(el, sym, q1, y1, q2, y2, e1, e2, i1, i2, buildTable, epsRows, incRows, false);
+    el.innerHTML = `
+      <div class="ov-header">
+        <div class="ticker">${sym}</div>
+        <div><div class="company-name-txt">${q1} ${y1} vs ${q2} ${y2}</div><div class="company-sector">Quarterly Comparison</div></div>
+      </div>
+      <div class="sec-label">EPS & Earnings</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead><tbody>${buildTable(epsRows)}</tbody></table></div>
+      ${incRows.length ? `<div class="sec-label">Income Statement</div><div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead><tbody>${buildTable(incRows)}</tbody></table></div>` : '<div style="font-size:.7rem;color:var(--muted);margin-top:12px">Quarterly income data unavailable for this symbol.</div>'}
+      <div style="margin-top:12px;font-size:.6rem;color:var(--muted)">Fiscal ${y1}: ${e1.fiscalDateEnding} · Fiscal ${y2}: ${e2.fiscalDateEnding}</div>
+      <div class="export-bar"><button class="btn btn-outline" onclick="exportCompare()">⬇ Export CSV</button></div>`;
   } catch(e){
     el.innerHTML = e.message==='DAILY_LIMIT'
       ? errBox('Daily limit reached (25 req/day on free tier). Resets at midnight UTC.')
       : e.message==='RATE_LIMIT'
       ? errBox('Rate limit hit (5 req/min on free tier). Wait 1 minute and try again.')
-      : e.message==='FMP_PREMIUM'
-      ? errBox('This endpoint requires an FMP Premium plan. Try using an Alpha Vantage key instead, or upgrade your FMP account.')
-      : e.message==='FMP_INVALID_KEY'
-      ? errBox('FMP API key is invalid or unauthorized. Check your key in Settings.')
       : e.message==='FMP_ERROR'
       ? errBox('No quarterly data for this symbol.')
       : e.message==='NO_DATA'
       ? errBox('No data found. Check the symbol.')
       : errBox('Network error: ' + e.message);
   }
-}
-
-function renderCmpResult(el, sym, q1, y1, q2, y2, e1, e2, i1, i2, buildTable, epsRows, incRows, fromCache){
-  const cacheBadge = fromCache
-    ? `<span style="font-size:.6rem;color:var(--muted);margin-left:10px">💾 from cache · <button onclick="loadCompare(true)" style="background:none;border:none;color:var(--accent);font-family:inherit;font-size:.6rem;cursor:pointer;padding:0">🔄 Refresh</button></span>`
-    : '';
-  el.innerHTML = `
-    <div class="ov-header">
-      <div class="ticker">${sym}</div>
-      <div>
-        <div class="company-name-txt" style="display:flex;align-items:center;gap:6px">${q1} ${y1} vs ${q2} ${y2}${cacheBadge}</div>
-        <div class="company-sector">Quarterly Comparison</div>
-      </div>
-    </div>
-    <div class="sec-label">EPS & Earnings</div>
-    <div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead><tbody>${buildTable(epsRows)}</tbody></table></div>
-    ${incRows.length ? `<div class="sec-label">Income Statement</div><div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>${q1} ${y1}</th><th>${q2} ${y2}</th><th>Δ Change</th></tr></thead><tbody>${buildTable(incRows)}</tbody></table></div>` : '<div style="font-size:.7rem;color:var(--muted);margin-top:12px">Quarterly income data unavailable for this symbol.</div>'}
-    <div style="margin-top:12px;font-size:.6rem;color:var(--muted)">Fiscal ${y1}: ${e1.fiscalDateEnding} · Fiscal ${y2}: ${e2.fiscalDateEnding}</div>
-    <div class="export-bar"><button class="btn btn-outline" onclick="exportCompare()">⬇ Export CSV</button></div>`;
-}
-
-function renderCmpFromCache(sym, q1, y1, q2, y2){
-  const cached = getCmpCache(sym);
-  if(!cached) { loadCompare(true); return; }
-  const el = document.getElementById('cmp-result');
-  const {qe, qi} = cached.data;
-  const qm = {Q1:'03',Q2:'06',Q3:'09',Q4:'12'};
-
-  const findQ=(arr,yr,q)=>{
-    const byPeriod = arr.find(e => String(e.fiscalYear)===String(yr) && e.period===q);
-    if(byPeriod) return byPeriod;
-    const m = qm[q];
-    const byExactMonth = arr.find(e => e.fiscalDateEnding?.startsWith(yr+'-'+m));
-    if(byExactMonth) return byExactMonth;
-    const targetMonth = parseInt(m, 10);
-    return arr.find(e => {
-      if(!e.fiscalDateEnding) return false;
-      const [eYear, eMonth] = e.fiscalDateEnding.split('-').map(Number);
-      if(String(eYear) !== String(yr)) return false;
-      return Math.abs(eMonth - targetMonth) <= 1;
-    });
-  };
-
-  const e1=findQ(qe,y1,q1), e2=findQ(qe,y2,q2);
-  const i1=qi?findQ(qi,y1,q1):null, i2=qi?findQ(qi,y2,q2):null;
-
-  if(!e1||!e2){
-    const avail = qe.slice(0,8).map(e => e.fiscalYear&&e.period ? `${e.fiscalYear} ${e.period}` : e.fiscalDateEnding).join(', ');
-    el.innerHTML = errBox(`Quarter not found in cache. Available: ${avail}<br><button onclick="loadCompare(true)" style="margin-top:8px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:inherit;font-size:.7rem;padding:6px 14px;cursor:pointer">🔄 Refresh from API</button>`);
-    return;
-  }
-
-  _cmpData = {sym,q1,y1,q2,y2,e1,e2,i1,i2};
-
-  const epsRows=[
-    {name:'Reported EPS',  k1:e1.reportedEPS,        k2:e2.reportedEPS},
-    {name:'Estimated EPS', k1:e1.estimatedEPS,        k2:e2.estimatedEPS},
-    {name:'EPS Surprise',  k1:e1.surprise,            k2:e2.surprise},
-    {name:'Surprise %',    k1:e1.surprisePercentage,  k2:e2.surprisePercentage, isPct:true},
-  ];
-  const incRows = i1&&i2 ? [
-    {name:'Total Revenue',    k1:i1.totalRevenue,    k2:i2.totalRevenue,    big:true},
-    {name:'Gross Profit',     k1:i1.grossProfit,     k2:i2.grossProfit,     big:true},
-    {name:'Operating Income', k1:i1.operatingIncome, k2:i2.operatingIncome, big:true},
-    {name:'Net Income',       k1:i1.netIncome,       k2:i2.netIncome,       big:true},
-    {name:'EBITDA',           k1:i1.ebitda,          k2:i2.ebitda,          big:true},
-  ] : [];
-
-  function buildTable(rows){
-    return rows.map((r,i)=>{
-      const v1=parseFloat(r.k1), v2=parseFloat(r.k2), diff=v1-v2, dp=v2!==0?(diff/Math.abs(v2)*100):0;
-      const f = r.big ? n=>isNaN(n)?'—':fmt(n) : r.isPct ? n=>isNaN(n)?'—':n.toFixed(2)+'%' : n=>isNaN(n)?'—':n.toFixed(4);
-      const cls = diff>0?'pos':diff<0?'neg':'';
-      const ds = isNaN(diff)?'—':`<span class="${cls}">${diff>=0?'+':''}${f(diff)} (${dp>=0?'+':''}${dp.toFixed(1)}%)</span>`;
-      return `<tr style="animation-delay:${i*0.055}s"><td class="metric-col">${r.name}</td><td>${f(v1)}</td><td>${f(v2)}</td><td>${ds}</td></tr>`;
-    }).join('');
-  }
-
-  renderCmpResult(el, sym, q1, y1, q2, y2, e1, e2, i1, i2, buildTable, epsRows, incRows, true);
 }
 
 function exportCompare(){
@@ -2333,10 +1851,6 @@ async function loadVersus(){
       ?errBox('No API key set. Open Settings and add a key.')
       :e.message==='NO_DATA'
       ?errBox('Symbol not found. Check the ticker and try again.')
-      :e.message==='FMP_PREMIUM'
-      ?errBox('This endpoint requires an FMP Premium plan. Try using an Alpha Vantage key instead.')
-      :e.message==='FMP_INVALID_KEY'
-      ?errBox('FMP API key is invalid. Check your key in Settings.')
       :e.message==='FMP_ERROR'
       ?errBox('FMP returned no data for this symbol. Try another.')
       :errBox('Network error: ' + e.message);
